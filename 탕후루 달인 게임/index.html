@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ff5d7d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="탕후루 달인">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>탕후루 달인</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Jua',system-ui,sans-serif;touch-action:none;background:#ffc9d5}
+html,body{overscroll-behavior:none;background:#ffbfcd}
+#wrap{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);background:radial-gradient(circle at 30% 20%,#fff1f4,#ffbfcd)}
+#stage{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;overflow:hidden;border-radius:20px;
+ background:linear-gradient(to bottom,transparent 0 650px,#f0b97f 650px 664px,#dfa063 664px 800px),
+ radial-gradient(circle,#ffe0e8 3px,transparent 4px) 0 0/40px 40px,#fff6f0}
+.screen{position:absolute;inset:0;display:none}
+.screen.show{display:block}
+.a{position:absolute}
+#topbar{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:20;pointer-events:none}
+.logo{font-size:34px;color:#e8294f;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff}
+.pills{display:flex;gap:10px}
+.topbadge{font-size:22px;padding:8px 16px;border-radius:24px;border:3px solid;white-space:nowrap}
+.topbadge.yes{background:#ffe3f1;color:#c0408a;border-color:#ff8cc6}
+.topbadge.no{background:#f2f2f2;color:#777;border-color:#ccc}
+.topbadge.ok{background:#e3f7e6;color:#2f8a48;border-color:#7cd08e}
+.pill{padding:9px 20px;border-radius:30px;background:#fff;color:#d0a6af;font-size:22px;border:3px solid #ffd0da;transition:.2s}
+.pill.on{background:#ff5d7d;color:#fff;border-color:#ff5d7d;transform:scale(1.08)}
+.pill.done{background:#ffe3ea;color:#ff5d7d}
+.coins{font-size:24px;background:#fff;border-radius:30px;padding:8px 18px;color:#a0602a;border:3px solid #ffd59a}
+.btn{position:absolute;font-family:inherit;font-size:30px;border:none;border-radius:40px;padding:16px 34px;color:#fff;background:#ff5d7d;box-shadow:0 6px 0 #d63a5c;cursor:pointer;white-space:nowrap}
+.btn:active{box-shadow:0 2px 0 #d63a5c;margin-top:4px}
+.btn:disabled{background:#d9cfd1;box-shadow:0 6px 0 #b9aeb0;cursor:default}
+.btn.sub{background:#ffb84d;box-shadow:0 6px 0 #d98a1c;font-size:24px;padding:12px 24px}
+.btn.blue{background:#4aa8e8;box-shadow:0 6px 0 #2a7fbf}
+.card{position:absolute;background:#fff;border-radius:28px;box-shadow:0 8px 0 rgba(0,0,0,.07);border:4px solid #ffd0da}
+.hint{position:absolute;background:#fff;border-radius:24px;padding:8px 18px;font-size:21px;color:#b0485f;border:3px dashed #ffb3c1;text-align:center}
+.badge{position:absolute;background:#ff5d7d;color:#fff;font-size:20px;border-radius:16px;padding:2px 10px;border:3px solid #fff;pointer-events:none}
+.label{position:absolute;font-size:24px;color:#a0485c}
+.refill{position:absolute;width:56px;height:56px;border-radius:50%;background:#ffb84d;box-shadow:0 4px 0 #d98a1c;border:3px solid #fff;font-size:26px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.refill:active{box-shadow:0 1px 0 #d98a1c;margin-top:3px}
+.refill-t{position:absolute;font-size:15px;color:#b07030;width:70px;text-align:center;pointer-events:none}
+.pulse{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12);filter:drop-shadow(0 0 12px #ffcf4d)}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.drop{animation:drop .4s cubic-bezier(.3,1.4,.6,1)}
+@keyframes drop{from{transform:translateY(-300px);opacity:0}to{transform:none;opacity:1}}
+.ghost{position:absolute;pointer-events:none;z-index:60;filter:drop-shadow(0 8px 6px rgba(0,0,0,.25))}
+#toast{position:absolute;left:50%;top:96px;transform:translateX(-50%) scale(.8);background:#4b2a33;color:#fff;font-size:25px;padding:12px 28px;border-radius:30px;opacity:0;transition:.25s;z-index:80;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) scale(1)}
+.meter{display:flex;align-items:center;gap:8px;margin:7px 0}
+.bar{position:relative;width:160px;height:24px;background:#f3e6e9;border-radius:14px;overflow:hidden;border:2px solid #e8cdd3}
+.bar .zone{position:absolute;left:66.6%;width:20%;top:0;bottom:0;background:rgba(80,200,120,.35);border-left:2px dashed #3aa860;border-right:2px dashed #3aa860}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffb84d;transition:width .08s}
+.pct{width:56px;font-size:19px;color:#8a5a64;text-align:right}
+.ripple{position:absolute;width:60px;height:16px;border:3px solid rgba(255,255,255,.85);border-radius:50%;pointer-events:none;animation:rip .7s ease-out forwards;z-index:30}
+@keyframes rip{to{transform:scale(3.2);opacity:0}}
+.hand{position:absolute;font-size:56px;pointer-events:none;animation:bob 1s infinite;z-index:40}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(16px)}}
+.steam{position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.85);filter:blur(3px);animation:rise 1.6s ease-out forwards;pointer-events:none;z-index:30}
+@keyframes rise{from{transform:translate(0,0) scale(.6);opacity:.9}to{transform:translate(var(--dx),-130px) scale(1.9);opacity:0}}
+.wind{position:absolute;height:5px;width:90px;border-radius:4px;background:rgba(120,190,255,.85);animation:blow .6s linear forwards;pointer-events:none;z-index:30}
+@keyframes blow{from{transform:translateX(0);opacity:0}20%{opacity:1}to{transform:translateX(-300px);opacity:0}}
+.candy{position:absolute;width:9px;height:6px;border-radius:3px;pointer-events:none;z-index:45}
+#shaker{position:absolute;z-index:44;cursor:grab;transition:transform .15s}
+#shaker.pour{transform:rotate(155deg)}
+#fanBlades{transform-origin:150px 150px;transform-box:view-box}
+#fan.on #fanBlades{animation:spin .18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#title{background:radial-gradient(circle at 50% 40%,#fff 0,#ffe3ea 45%,#ffc2cf 100%);z-index:50}
+.bigtitle{position:absolute;left:0;right:0;top:150px;text-align:center;font-size:140px;color:#ff3d64;text-shadow:6px 6px 0 #fff,-4px -4px 0 #fff,4px -4px 0 #fff,-4px 4px 0 #fff,0 14px 0 #ffb3c1;letter-spacing:6px}
+.subtitle{position:absolute;left:0;right:0;top:350px;text-align:center;font-size:30px;color:#a0485c}
+.chips{position:absolute;left:0;right:0;top:420px;display:flex;justify-content:center;gap:16px}
+.chip{background:#fff;border:3px solid #ffb3c1;border-radius:30px;padding:10px 22px;font-size:26px;color:#e8294f}
+.deco{position:absolute;top:190px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{margin-top:0}50%{margin-top:-18px}}
+#result,#pay{background:rgba(75,42,51,.55);z-index:70}
+.money{position:absolute;display:flex;align-items:center;justify-content:center;font-size:22px;color:#333;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.15)}
+.bill{width:150px;height:72px;border-radius:8px;border:3px solid rgba(0,0,0,.2)}
+.bill:before{content:'';position:absolute;left:10px;top:10px;width:40px;height:48px;border-radius:50%;background:rgba(255,255,255,.35)}
+.b1000{background:linear-gradient(135deg,#a8d4f0,#7fb8e0)}.b5000{background:linear-gradient(135deg,#f7c48a,#ec9f55)}.b10000{background:linear-gradient(135deg,#b5e0a8,#86c473)}
+.coin{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#c9ced6 60%,#9aa2ad);border:3px solid #8a929c;font-size:19px}
+.mini{position:relative;display:inline-flex;margin:4px;transform:scale(.62);transform-origin:left top;cursor:pointer}
+.tray{position:absolute;background:#fff8e6;border:3px dashed #e0b060;border-radius:20px;padding:8px;display:flex;flex-wrap:wrap;align-content:flex-start;overflow:hidden}
+.trayitem{position:relative;margin:3px;cursor:pointer}
+.trayitem .money{position:relative;transform:scale(.6);transform-origin:left top}
+.payTxt{position:absolute;font-size:24px;color:#6a3a46}
+#ccard{position:absolute;width:200px;height:126px;border-radius:14px;background:linear-gradient(135deg,#ff7aa2,#8a6cff);box-shadow:0 6px 0 rgba(0,0,0,.2);cursor:grab;z-index:5;color:#fff;font-size:18px;padding:12px}
+#ccard .chip{width:40px;height:30px;border-radius:6px;background:linear-gradient(135deg,#ffe28a,#d9a520);margin:12px 0 8px}
+.receipt{position:absolute;width:180px;background:#fff;border:2px solid #ddd;padding:10px;font-size:18px;color:#444;text-align:center;animation:slip .8s ease-out}
+@keyframes slip{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.phone{position:absolute;width:220px;height:380px;border-radius:30px;background:#222;padding:14px}
+.phone .scr{width:100%;height:100%;border-radius:20px;background:#f4f8ff;padding:14px;font-size:19px;color:#333;text-align:center}
+.noti{position:absolute;background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.2);padding:12px 18px;font-size:22px;color:#333;border-left:8px solid #3aa860;animation:pop .4s cubic-bezier(.3,1.5,.6,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.stars{font-size:60px;letter-spacing:6px}
+.star.off{filter:grayscale(1);opacity:.35}
+.rline{font-size:24px;color:#6a3a46;margin:5px 0}
+#rotate{display:none;position:fixed;inset:0;z-index:999;background:#ff5d7d;color:#fff;font-family:'Jua',sans-serif;font-size:34px;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center}
+#rotate .ico{font-size:110px;animation:turn 1.6s ease-in-out infinite}
+@keyframes turn{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+#rotate.intro{display:flex;transition:opacity .3s}
+#rotate.fade{opacity:0}
+@media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="gS" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ff8a95"/><stop offset=".5" stop-color="#e8283e"/><stop offset="1" stop-color="#b3112a"/></radialGradient>
+<radialGradient id="gT" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffd27a"/><stop offset=".55" stop-color="#ff9d22"/><stop offset="1" stop-color="#e5700a"/></radialGradient>
+<radialGradient id="gA" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff9a8a"/><stop offset=".5" stop-color="#e3302a"/><stop offset="1" stop-color="#a5161a"/></radialGradient>
+<radialGradient id="gB" cx="35%" cy="25%" r="80%"><stop offset="0" stop-color="#6a4a86"/><stop offset=".5" stop-color="#2e1640"/><stop offset="1" stop-color="#160a20"/></radialGradient>
+<radialGradient id="gG" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#9a6ac0"/><stop offset=".5" stop-color="#5a2a7e"/><stop offset="1" stop-color="#34104e"/></radialGradient>
+<radialGradient id="gW" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#eaffb0"/><stop offset=".55" stop-color="#b6e05a"/><stop offset="1" stop-color="#82b52c"/></radialGradient>
+<linearGradient id="gStick" x1="0" x2="1"><stop offset="0" stop-color="#f8e2b6"/><stop offset="1" stop-color="#d6ab6c"/></linearGradient>
+<linearGradient id="gSyrup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#f2a52a"/></linearGradient>
+<linearGradient id="gPot" x1="0" x2="1"><stop offset="0" stop-color="#8f9bab"/><stop offset=".35" stop-color="#eef2f7"/><stop offset="1" stop-color="#76828f"/></linearGradient>
+</defs></svg>
+
+<div id="wrap"><div id="stage">
+
+ <div id="topbar">
+  <div id="topLeft"><div class="logo">🍡 탕후루 달인</div></div>
+  <div class="pills"><div class="pill" id="p1">① 과일 꽂기</div><div class="pill" id="p2">② 설탕 묻히기</div><div class="pill" id="p3">③ 식히기</div></div>
+  <div class="coins">💰 <span id="coins">0</span>원 · 🍡 <span id="made">0</span>개</div>
+ </div>
+
+ <!-- STEP 1 -->
+ <div class="screen" id="s1">
+  <div class="card" style="left:24px;top:92px;width:290px;height:600px">
+   <div style="text-align:center;margin-top:10px;font-size:50px" id="cust">🧒</div>
+   <div style="text-align:center;font-size:21px;color:#a0485c">이렇게 만들어 주세요!</div>
+   <div id="order" style="display:flex;justify-content:center;margin-top:4px"></div>
+   <div style="text-align:center;font-size:18px;color:#c07080">①번부터 차례로 꽂아요 ⬆</div>
+   <div id="orderTop" style="text-align:center;font-size:21px;margin-top:6px"></div>
+  </div>
+  <div class="hint" style="left:330px;top:84px;width:440px">과일을 끌어다 꽂아요! (톡 눌러도 OK)</div>
+  <div class="a" id="sk1" style="left:470px;top:130px;width:160px;height:560px"></div>
+  <div class="a" id="holder1" style="left:440px;top:660px"></div>
+  <div class="label" id="cnt1" style="left:640px;top:470px">0 / 4</div>
+  <button class="btn sub" id="undo" style="left:610px;top:520px">↩ 하나 빼기</button>
+  <div id="bowls"></div>
+  <button class="btn" id="next1" style="left:1030px;top:700px;font-size:26px;padding:12px 28px" disabled>다음 단계 ▶</button>
+ </div>
+
+ <!-- STEP 2 -->
+ <div class="screen" id="s2">
+  <div class="card" style="left:24px;top:92px;width:310px;height:390px;padding:14px 16px">
+   <div style="font-size:23px;color:#e8294f;text-align:center">꼬치를 잡고 시럽 쟁반에<br>눕혀 담가 좌우로 굴려요!</div>
+   <div id="meters" style="margin-top:10px"></div>
+   <div style="font-size:18px;color:#3aa860;text-align:center;margin-top:6px">초록 칸에 맞추면 최고! 💚</div>
+   <div style="font-size:17px;color:#c07080;text-align:center">너무 오래 담그면 설탕이 두꺼워져요</div>
+  </div>
+  <div class="a" id="potBack" style="left:260px;top:490px"></div>
+  <div class="a" id="sk2" style="left:560px;top:10px;width:160px;height:560px;z-index:25;cursor:grab;transform:rotate(90deg)"></div>
+  <div class="a" id="potFront" style="left:260px;top:490px;z-index:26;pointer-events:none"></div>
+  <div class="hand" id="hand2">👇</div>
+  <div class="card" style="left:930px;top:180px;width:300px;padding:18px;text-align:center;font-size:22px;color:#a0602a;border-color:#ffd59a">🍯 설탕 시럽은<br>미리 녹여 두었어요!</div>
+  <button class="btn" id="next2" style="left:1010px;top:690px;z-index:27" disabled>다음 단계 ▶</button>
+ </div>
+
+ <!-- STEP 3 -->
+ <div class="screen" id="s3">
+  <div class="card" style="left:24px;top:92px;width:290px;height:600px">
+   <div style="text-align:center;font-size:26px;color:#e8294f;margin-top:14px">설탕 온도</div>
+   <div style="text-align:center;font-size:40px;color:#ff4d4d" id="tempTxt">100°C</div>
+   <div class="a" id="thermo" style="left:40px;top:120px"></div>
+   <div class="a" style="left:150px;top:140px;font-size:21px;color:#ff4d4d">🔥 앗 뜨거!<br><span style="font-size:16px;color:#c07080">토핑이 붙어요</span></div>
+   <div class="a" style="left:150px;top:300px;font-size:21px;color:#ff9d22">🫠 말랑말랑</div>
+   <div class="a" style="left:150px;top:440px;font-size:21px;color:#3aa860">✨ 바삭!</div>
+  </div>
+  <div class="hint" style="left:600px;top:84px;width:640px">뜨거울 때 팝핑캔디를 뿌리고 → 선풍기로 식혀요!</div>
+  <div class="a" id="sk3" style="left:380px;top:130px;width:160px;height:560px"></div>
+  <div class="a" id="holder3" style="left:350px;top:660px"></div>
+  <div id="shaker"></div>
+  <div class="label" id="shakerLbl" style="left:580px;top:300px;font-size:17px;width:130px;text-align:center;color:#c0408a">팝핑캔디<br>끌어서 흔들기</div>
+  <div class="a" id="fan" style="left:800px;top:160px"></div>
+  <button class="btn blue" id="hold" style="left:740px;top:600px;font-size:28px">🌀 꾹 눌러서 바람 쐬기</button>
+  <button class="btn" id="done3" style="left:1070px;top:700px;font-size:26px;padding:12px 28px" disabled>완성! ✨</button>
+ </div>
+
+ <!-- TITLE -->
+ <div class="screen show" id="title">
+  <div class="deco" id="decoL" style="left:70px;transform:rotate(-14deg)"></div>
+  <div class="deco" id="decoR" style="left:1090px;transform:rotate(14deg);animation-delay:-1.5s"></div>
+  <div class="bigtitle">탕후루 달인</div>
+  <div class="subtitle">🍓🍊🍎🥝🍇🍋 여러 과일과 ✨팝핑캔디로 탕후루를 만들어 팔아 봐요!</div>
+  <div class="chips"><div class="chip">① 과일 꽂기</div><div class="chip">② 설탕 묻히기</div><div class="chip">③ 식히기</div></div>
+  <button class="btn" id="startBtn" style="left:500px;top:530px;width:280px;font-size:42px">시작하기!</button>
+  <button class="btn sub" id="fsBtn" style="left:545px;top:650px;width:190px;font-size:22px">⛶ 전체 화면</button>
+  <button class="btn blue" id="installBtn" style="left:780px;top:650px;font-size:22px;padding:12px 24px;display:none">📲 앱 설치</button>
+ </div>
+
+ <!-- RESULT -->
+ <div class="screen" id="result">
+  <div class="card" style="left:240px;top:100px;width:800px;height:610px;border-color:#ff9db2">
+   <div class="a" id="resSk" style="left:60px;top:40px"></div>
+   <div class="a" style="left:250px;top:24px;width:520px;text-align:center">
+    <div style="font-size:66px" id="resFace">😄</div>
+    <div style="font-size:30px;color:#e8294f" id="resSay">맛있어요!</div>
+    <div class="stars" id="resStars"></div>
+    <div id="resLines" style="text-align:left;margin:4px 0 0 40px"></div>
+    <div style="font-size:26px;color:#a0602a;margin-top:6px" id="resCoin"></div>
+   </div>
+   <button class="btn" id="toPay" style="left:400px;top:510px">결제 받기 💳</button>
+  </div>
+ </div>
+
+ <!-- PAY -->
+ <div class="screen" id="pay">
+  <div class="card" id="payCard" style="left:150px;top:86px;width:980px;height:640px;border-color:#9fd39a">
+   <div class="a" style="left:30px;top:14px;font-size:66px" id="payFace"></div>
+   <div class="a" style="left:120px;top:24px;font-size:28px;color:#6a3a46" id="paySay"></div>
+   <div class="a" style="left:120px;top:64px;font-size:20px;color:#999" id="payHow"></div>
+   <div class="a" style="right:30px;top:18px;text-align:right"><div style="font-size:20px;color:#888">받을 돈</div><div style="font-size:44px;color:#e8294f" id="payPrice"></div></div>
+   <div class="a" id="payBody" style="left:0;top:120px;width:972px;height:400px"></div>
+   <button class="btn" id="nextCust" style="left:350px;top:540px;display:none">다음 손님 받기 🙋</button>
+  </div>
+ </div>
+
+ <div id="toast"></div>
+</div></div>
+
+<div id="rotate" class="intro"><div class="ico">📱</div><div>화면을 <b>가로</b>로 돌려 주세요!</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const stage=$('stage');let scale=1;
+const wrapEl=$('wrap');
+function fit(){const W=wrapEl.clientWidth||innerWidth,H=wrapEl.clientHeight||innerHeight;scale=Math.min(W/1280,H/800);
+ stage.style.transform=`translate(${(W-1280*scale)/2}px,${(H-800*scale)/2}px) scale(${scale})`;}
+addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));fit();
+function sp(e){const r=stage.getBoundingClientRect();return{x:(e.clientX-r.left)/scale,y:(e.clientY-r.top)/scale}}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+/* ---------- sound ---------- */
+let AC=null;
+function audio(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+function tone(f,d=.12,type='sine',v=.15,f2){if(!AC)return;try{const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02);}catch(e){}}
+const sfx={
+ pop:()=>tone(500,.12,'sine',.2,1000),
+ err:()=>tone(200,.2,'square',.07,120),
+ tick:()=>tone(800,.07,'triangle',.14),
+ ding:()=>tone(1320,.3,'sine',.14),
+ slosh:()=>tone(170,.16,'triangle',.09,90),
+ sprinkle:()=>tone(rnd(1800,2600),.03,'triangle',.05),
+ crunch:()=>{for(let i=0;i<6;i++)setTimeout(()=>tone(300+Math.random()*1200,.04,'square',.05),i*55)},
+ crackle:()=>{for(let i=0;i<14;i++)setTimeout(()=>tone(rnd(2000,4000),.02,'square',.04),i*rnd(40,90))},
+ win:()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.28,'triangle',.15),i*120))
+};
+
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2000)}
+function anim(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),450)}
+
+/* ---------- fruit drawings (centered at 0,0) ---------- */
+const SPATH="M0,44 C-26,36 -44,8 -42,-14 C-40,-34 -18,-38 0,-32 C18,-38 40,-34 42,-14 C44,8 26,36 0,44Z";
+const APATH="M0,-26 C-14,-40 -44,-36 -44,-4 C-44,24 -22,44 -8,41 C-4,40 4,40 8,41 C22,44 44,24 44,-4 C44,-36 14,-40 0,-26Z";
+const SEEDS=[[-20,-14],[0,-18],[20,-14],[-26,4],[-8,0],[10,2],[26,4],[-14,18],[4,20],[16,16],[-2,32]];
+function strawberry(){return `<path d="${SPATH}" fill="url(#gS)" stroke="#a80f24" stroke-width="2"/>`+
+ SEEDS.map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="2.2" ry="3.4" fill="#ffe27a"/>`).join('')+
+ `<path d="M0,-28 L-24,-38 L-10,-27 L-20,-46 L-3,-32 L0,-50 L4,-32 L20,-46 L10,-27 L24,-38 Z" fill="#3fae4a" stroke="#2a8236" stroke-width="2" stroke-linejoin="round"/>`}
+function tangerine(){return `<circle r="40" fill="url(#gT)" stroke="#d2680a" stroke-width="2"/>`+
+ [[-18,-10],[14,-18],[22,10],[-6,20],[-24,14],[4,-2],[10,28],[-10,-24]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.8" fill="#e07a10" opacity=".7"/>`).join('')+
+ `<path d="M2,-40 q14,-14 26,-6 q-10,12 -26,6z" fill="#3fae4a" stroke="#2a8236" stroke-width="2"/><circle cx="0" cy="-38" r="3" fill="#7a9a2a"/>`}
+function apple(){return `<path d="${APATH}" fill="url(#gA)" stroke="#8a1015" stroke-width="2"/><path d="M0,-26 q1,-14 7,-20" stroke="#6b4020" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M6,-38 q16,-14 28,-4 q-14,12 -28,4z" fill="#4cb84a" stroke="#2a8236" stroke-width="2"/><ellipse cx="-22" cy="4" rx="4" ry="9" fill="#ffd0c8" opacity=".35"/>`}
+function kiwi(){let s=`<circle r="40" fill="#8a6a3a" stroke="#5e4522" stroke-width="2"/><circle r="35" fill="#86c943"/><circle r="30" fill="#9ad45a"/>`;
+ for(let k=0;k<16;k++){const a=k/16*Math.PI*2;s+=`<line x1="${(Math.cos(a)*12).toFixed(1)}" y1="${(Math.sin(a)*12).toFixed(1)}" x2="${(Math.cos(a)*30).toFixed(1)}" y2="${(Math.sin(a)*30).toFixed(1)}" stroke="#c8ec96" stroke-width="2" opacity=".7"/>`}
+ for(let k=0;k<14;k++){const a=k/14*Math.PI*2+.2;s+=`<ellipse cx="${(Math.cos(a)*20).toFixed(1)}" cy="${(Math.sin(a)*20).toFixed(1)}" rx="2" ry="3.4" transform="rotate(${(a*180/Math.PI+90).toFixed(0)} ${(Math.cos(a)*20).toFixed(1)} ${(Math.sin(a)*20).toFixed(1)})" fill="#1d1408"/>`}
+ return s+`<ellipse rx="11" ry="13" fill="#eef8d8"/>`}
+function blacksapphire(){return `<path d="M-6,-44 C-26,-40 -26,10 -16,32 C-10,44 6,46 14,36 C26,18 24,-34 10,-42 C4,-46 -2,-46 -6,-44Z" fill="url(#gB)" stroke="#120818" stroke-width="2"/><ellipse cx="-8" cy="-14" rx="4" ry="16" fill="#b9a6d6" opacity=".35"/><circle cx="2" cy="-44" r="3.5" fill="#6b5a3a"/>`}
+function kyoho(){return `<circle r="40" fill="url(#gG)" stroke="#2a0c3e" stroke-width="2"/><circle r="40" fill="#c6b2e6" opacity=".12"/><circle cx="0" cy="-39" r="4" fill="#6b5a3a"/><circle cx="16" cy="18" r="3" fill="#2a0c3e" opacity=".4"/>`}
+function greengrape(){return `<circle r="33" fill="url(#gW)" stroke="#6e9a22" stroke-width="2"/><circle cx="0" cy="-32" r="3.5" fill="#7a8a3a"/><path d="M-6,-6 q6,14 14,18" stroke="#d6f29a" stroke-width="2" fill="none" opacity=".6"/>`}
+function lemon(){let s=`<circle r="40" fill="#ffd93d" stroke="#e0b000" stroke-width="2"/><circle r="35" fill="#fffbe0"/>`;
+ for(let k=0;k<8;k++){const a1=k/8*Math.PI*2+.08,a2=(k+1)/8*Math.PI*2-.08,r=31;
+  s+=`<path d="M${(Math.cos(a1)*4).toFixed(1)},${(Math.sin(a1)*4).toFixed(1)} L${(Math.cos(a1)*r).toFixed(1)},${(Math.sin(a1)*r).toFixed(1)} A${r},${r} 0 0 1 ${(Math.cos(a2)*r).toFixed(1)},${(Math.sin(a2)*r).toFixed(1)}Z" fill="#ffe873" stroke="#fff3b0" stroke-width="1"/>`}
+ return s+`<circle r="4" fill="#fffbe0"/>`}
+const FR={
+ s:{n:'딸기',j:'가',e:'🍓',d:strawberry,c:`<path d="${SPATH}" transform="scale(1.12)"`,b:46},
+ t:{n:'귤',j:'이',e:'🍊',d:tangerine,c:'<circle r="45"',b:42},
+ a:{n:'사과',j:'가',e:'🍎',d:apple,c:`<path d="${APATH}" transform="scale(1.1)"`,b:44},
+ k:{n:'키위',j:'가',e:'🥝',d:kiwi,c:'<circle r="45"',b:42},
+ b:{n:'블랙사파이어',j:'가',e:'🍇',d:blacksapphire,c:'<ellipse cx="0" cy="-2" rx="28" ry="50"',b:44},
+ g:{n:'거봉',j:'이',e:'🍇',d:kyoho,c:'<circle r="45"',b:42},
+ w:{n:'청포도',j:'가',e:'🍏',d:greengrape,c:'<circle r="38"',b:35},
+ l:{n:'레몬',j:'이',e:'🍋',d:lemon,c:'<circle r="45"',b:42},
+};
+const KEYS=['s','t','a','k','b','g','w','l'];
+const fruit=t=>FR[t].d();
+const shine=`<ellipse cx="-14" cy="-8" rx="5" ry="10" fill="#fff" opacity=".3" transform="rotate(25 -14 -8)"/>`;
+function coatG(t,coat,cool,side){if(coat<=0)return '';
+ const a=Math.min(coat,130)/130;
+ const c=[lerp(255,236,cool),lerp(170,248,cool),lerp(40,255,cool)].map(Math.round).join(',');
+ const op=(.18+.42*a)*(1-.45*cool);
+ let s=`${FR[t].c} fill="rgba(${c},${op.toFixed(2)})" stroke="rgba(255,255,255,${(.3+.5*a*cool).toFixed(2)})" stroke-width="2.5"/>`;
+ s+=`<ellipse cx="-14" cy="-12" rx="6" ry="14" transform="rotate(25 -14 -12)" fill="#fff" opacity="${(.2+.6*a*(.3+.7*cool)).toFixed(2)}"/>`;
+ s+=`<ellipse cx="14" cy="16" rx="4" ry="7" transform="rotate(-30 14 16)" fill="#fff" opacity="${(.5*a*cool).toFixed(2)}"/>`;
+ if(coat>130){const b=FR[t].b;s+=`<g${side?' transform="rotate(-90)"':''}><path d="M-12,${b} q10,28 20,0z" fill="rgba(${c},.85)"/><path d="M12,${b-6} q6,18 12,0z" fill="rgba(${c},.8)"/></g>`}
+ if(cool>.95&&coat>=100)s+=`<path d="M24,-30 l3,8 8,3 -8,3 -3,8 -3,-8 -8,-3 8,-3z" fill="#fff"/>`;
+ return s}
+const bitsG=bs=>(bs||[]).map(b=>`<rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="8" height="5" rx="2.5" fill="${b.c}" transform="rotate(${b.r} ${b.x.toFixed(1)} ${b.y.toFixed(1)})"/>`).join('');
+const fruitY=(i,dir)=>dir==='up'?374-i*92:186+i*92;
+function skewerSVG(fr,co,o={}){const dir=o.dir||'up',cool=o.cool||0,w=o.w||160;
+ let stick=`<rect x="75" y="14" width="10" height="536" rx="4" fill="url(#gStick)" stroke="#b98b4e" stroke-width="1.5"/><path d="M75,16 L80,2 L85,16Z" fill="#f0d29e" stroke="#b98b4e" stroke-width="1.5"/>`;
+ if(dir==='down')stick=`<g transform="translate(0,560) scale(1,-1)">${stick}</g>`;
+ let f='';
+ if(o.slots)for(let i=fr.length;i<4;i++){const y=fruitY(i,dir);f+=`<circle cx="80" cy="${y}" r="38" fill="rgba(255,255,255,.5)" stroke="#ffb3c1" stroke-width="3" stroke-dasharray="8 6"/><text x="80" y="${y+10}" text-anchor="middle" font-size="30" fill="#ffb3c1" font-family="Jua">${i+1}</text>`}
+ fr.forEach((t,i)=>{const y=fruitY(i,dir);
+  f+=`<g transform="translate(80,${y})"><g class="${i===o.newIdx?'drop':''}">${fruit(t)}${shine}${coatG(t,co?co[i]||0:0,cool,o.side)}${bitsG(o.bits&&o.bits[i])}</g></g>`;
+  if(o.nums)f+=`<circle cx="140" cy="${y}" r="17" fill="#ff7a93"/><text x="140" y="${y+8}" text-anchor="middle" font-size="22" fill="#fff" font-family="Jua">${i+1}</text>`});
+ return `<svg viewBox="0 0 160 560" width="${w}" height="${w*3.5}" style="overflow:visible">${stick}${f}</svg>`}
+const fruitMini=(t,s=90)=>`<svg viewBox="-50 -55 100 105" width="${s}" height="${s*1.05}">${fruit(t)}${shine}</svg>`;
+const BPOS=[[62,72],[120,64],[178,72],[90,92],[150,92],[120,80]];
+function bowlSVG(t,n){const ps=BPOS.slice(0,n).sort((a,b)=>a[1]-b[1]);
+ const f=ps.map(([x,y])=>`<g transform="translate(${x},${y}) scale(.62)">${fruit(t)}${shine}</g>`).join('');
+ return `<svg viewBox="0 0 240 180" width="170" height="128"><ellipse cx="120" cy="100" rx="112" ry="24" fill="#d8eefc" stroke="#8cc4ea" stroke-width="3"/>${f}<path d="M8,100 Q14,172 120,172 Q226,172 232,100 A112,24 0 0 1 8,100Z" fill="#fff" stroke="#8cc4ea" stroke-width="3"/><text x="120" y="158" text-anchor="middle" font-family="Jua" font-size="${FR[t].n.length>4?22:28}" fill="#4a90c0">${FR[t].n}</text>${n===0?'<text x="120" y="96" text-anchor="middle" font-family="Jua" font-size="26" fill="#e8294f">텅!</text>':''}</svg>`}
+const holderSVG=`<svg viewBox="0 0 220 100" width="220" height="100"><path d="M30,10 L190,10 L210,90 L10,90Z" fill="#c98a4b" stroke="#8f5a2a" stroke-width="3"/><ellipse cx="110" cy="10" rx="80" ry="10" fill="#e0a868" stroke="#8f5a2a" stroke-width="3"/><ellipse cx="110" cy="10" rx="9" ry="4" fill="#6b4020"/><text x="110" y="62" text-anchor="middle" font-family="Jua" font-size="22" fill="#fff4e0">꼬치 꽂이</text></svg>`;
+['holder1','holder3'].forEach(id=>{$(id).innerHTML=holderSVG;$(id).style.zIndex=5});
+
+/* ---------- state ---------- */
+const subj=t=>FR[t].n+FR[t].j;
+const FACES=['🧒','👧','👦','🧑','👩','👴','👵','👨','🧓'];
+const CANDY=['#ff6fae','#6fc8ff','#ffd84d','#b48cff','#7be08a','#ff9a4d'];
+const S={stock:{},pending:{},coins:0,made:0,price:3000,order:[],topping:false,fruits:[],coats:[],bits:[],temp:100,step:0};
+KEYS.forEach(k=>{S.stock[k]=2;S.pending[k]=0});
+try{const d=JSON.parse(localStorage.getItem('tanghulu-won')||'null');if(d){S.coins=d.coins||0;S.made=d.made||0}}catch(e){}
+function save(){try{localStorage.setItem('tanghulu-won',JSON.stringify({coins:S.coins,made:S.made}))}catch(e){}}
+const won=n=>n.toLocaleString('ko-KR')+'원';
+function updTop(){$('coins').textContent=S.coins.toLocaleString('ko-KR');$('made').textContent=S.made}
+const nBits=()=>S.bits.reduce((n,b)=>n+b.length,0);
+function updTopping(){if(!S.order.length)return;const n=nBits();let cls,txt;
+ if(S.topping){const done=S.step===3&&n>=10;cls=done?'ok':'yes';txt=S.step===3?`✨ 팝핑캔디 넣기 · ${Math.min(n,10)}/10${done?' ✅':''}`:'✨ 팝핑캔디 넣기'}
+ else{cls=n>0?'yes':'no';txt=n>0?`🙅 안 먹는 손님인데 ${n}개 붙음!`:'🙅 팝핑캔디 안 먹는 손님'}
+ $('topLeft').innerHTML=`<div class="topbadge ${cls}">${txt}</div>`}
+
+function newOrder(){let o;do{o=Array.from({length:4},()=>KEYS[Math.floor(Math.random()*KEYS.length)])}while(new Set(o).size<2);
+ S.noCandyCount=S.noCandyCount||0;S.order=o;S.topping=S.made===0?true:S.lastTop===false?Math.random()<.75:Math.random()<.4;S.lastTop=S.topping;S.fruits=[];S.coats=[];S.bits=[];S.temp=100;
+ $('cust').textContent=FACES[Math.floor(Math.random()*FACES.length)];
+ $('order').innerHTML=skewerSVG(o,null,{w:100,nums:true});
+ $('orderTop').innerHTML=S.topping?'<span style="color:#c0408a">✨ 팝핑캔디 뿌려 주세요!</span>':'<div style="color:#e8294f;background:#fff0f0;border:3px solid #ff9a9a;border-radius:16px;margin:0 14px;padding:4px">🙅 저는 팝핑캔디<br>안 먹어요!</div>';}
+
+function goStep(n){S.step=n;['s1','s2','s3','title','result','pay'].forEach(id=>$(id).classList.remove('show'));
+ if(n>=1&&n<=3)$('s'+n).classList.add('show');
+ [1,2,3].forEach(i=>{const p=$('p'+i);p.classList.toggle('on',i===n);p.classList.toggle('done',i<n)});
+ if(n===1)render1();if(n===2)setup2();if(n===3)setup3();updTopping();}
+
+/* ---------- STEP 1 ---------- */
+const CELL=KEYS.map((k,i)=>({k,x:790+(i%2)*240,y:92+Math.floor(i/2)*148}));
+$('bowls').innerHTML=CELL.map(c=>`<div class="a" id="bowl-${c.k}" style="left:${c.x}px;top:${c.y+8}px;cursor:grab"></div>
+ <div class="badge" id="num-${c.k}" style="left:${c.x+140}px;top:${c.y+4}px">2</div>
+ <div class="refill" id="box-${c.k}" style="left:${c.x+176}px;top:${c.y+34}px">📦</div>
+ <div class="refill-t" style="left:${c.x+169}px;top:${c.y+96}px">채우기</div>`).join('');
+function renderBowls(){KEYS.forEach(t=>{$('bowl-'+t).innerHTML=bowlSVG(t,S.stock[t]);$('num-'+t).textContent=S.stock[t];
+ const need=S.order.slice(S.fruits.length).filter(x=>x===t).length;
+ $('box-'+t).classList.toggle('pulse',S.stock[t]+S.pending[t]<need)})}
+function render1(newIdx=-1){$('sk1').innerHTML=skewerSVG(S.fruits,null,{newIdx,slots:true});
+ $('cnt1').textContent=`${S.fruits.length} / 4`;$('next1').disabled=S.fruits.length<4;$('undo').disabled=S.fruits.length===0;
+ $('next1').classList.toggle('pulse',S.fruits.length===4);renderBowls()}
+function addFruit(t){
+ if(S.fruits.length>=4){sfx.err();toast('꼬치가 꽉 찼어요! 다음 단계로 가요 ▶');anim($('next1'),'shake');return}
+ if(S.stock[t]<=0){sfx.err();toast(`${subj(t)} 다 떨어졌어요! 📦 채우기를 눌러요`);anim($('box-'+t),'shake');return}
+ S.stock[t]--;S.fruits.push(t);sfx.pop();render1(S.fruits.length-1);
+ const i=S.fruits.length-1;
+ if(S.order[i]!==t)setTimeout(()=>toast('앗, 주문이랑 달라요! "하나 빼기"로 고칠 수 있어요'),200);
+ else if(S.stock[t]===0)setTimeout(()=>toast(`${subj(t)} 다 떨어졌어요! 📦 채우기를 눌러요`),200);
+}
+$('undo').addEventListener('click',()=>{if(!S.fruits.length)return;const t=S.fruits.pop();S.stock[t]=Math.min(6,S.stock[t]+1);sfx.tick();render1()});
+function refill(t){audio();const c=CELL.find(c=>c.k===t);
+ if(S.stock[t]+S.pending[t]>=6){sfx.err();toast(`${FR[t].n} 그릇이 가득 찼어요!`);anim($('bowl-'+t),'shake');return}
+ S.pending[t]++;sfx.tick();
+ const el=document.createElement('div');el.className='ghost';el.style.left='0px';el.style.top='0px';el.innerHTML=fruitMini(t,50);stage.appendChild(el);
+ const x0=c.x+204,y0=c.y+62,x1=c.x+85+rnd(-25,25),y1=c.y+70;
+ const a=el.animate([{transform:`translate(${x0-25}px,${y0-25}px) scale(.6)`},{transform:`translate(${(x0+x1)/2-25}px,${y0-110}px) scale(1)`},{transform:`translate(${x1-25}px,${y1-25}px) scale(.8)`}],{duration:420,easing:'ease-in-out'});
+ a.onfinish=()=>{el.remove();S.pending[t]--;S.stock[t]=Math.min(6,S.stock[t]+1);sfx.pop();renderBowls();if(S.stock[t]===6)toast(`${FR[t].n} 가득! 👍`)};
+}
+KEYS.forEach(t=>{
+ $('box-'+t).addEventListener('pointerdown',e=>{e.preventDefault();refill(t)});
+ $('bowl-'+t).addEventListener('pointerdown',e=>{e.preventDefault();audio();
+  if(S.stock[t]<=0){sfx.err();toast(`${subj(t)} 다 떨어졌어요! 📦 채우기를 눌러요`);anim($('box-'+t),'shake');return}
+  const p=sp(e),g=document.createElement('div');g.className='ghost';g.innerHTML=fruitMini(t,90);stage.appendChild(g);
+  drag={kind:'fruit',t,g,sx:p.x,sy:p.y,moved:false};posGhost(p)});
+});
+function posGhost(p){drag.g.style.left=(p.x-45)+'px';drag.g.style.top=(p.y-50)+'px'}
+$('next1').addEventListener('click',()=>{if(S.fruits.length<4)return;sfx.tick();goStep(2)});
+
+/* ---------- STEP 2 (horizontal tray) ---------- */
+const SURF=562;const sk2={cx:640,cy:330};let warned=false,dirty2=false,lastSlosh=0,lastRip=0,reached=[],toldDone=false;
+$('potBack').innerHTML=`<svg viewBox="0 0 760 260" width="760" height="260"><ellipse cx="380" cy="70" rx="370" ry="64" fill="url(#gPot)" stroke="#6f7b8b" stroke-width="3"/><ellipse cx="380" cy="72" rx="348" ry="52" fill="url(#gSyrup)"/><ellipse cx="270" cy="58" rx="110" ry="10" fill="#fff" opacity=".45"/></svg>`;
+$('potFront').innerHTML=`<svg viewBox="0 0 760 260" width="760" height="260"><path d="M10,70 L40,215 Q380,250 720,215 L750,70 A370,64 0 0 1 10,70Z" fill="url(#gPot)" stroke="#6f7b8b" stroke-width="3"/><path d="M32,72 A348,52 0 0 0 728,72Z" fill="url(#gSyrup)"/><rect x="290" y="150" width="180" height="54" rx="14" fill="#fff6e6" stroke="#c98a4b" stroke-width="3"/><text x="380" y="187" text-anchor="middle" font-family="Jua" font-size="28" fill="#c06a10">🍯 설탕 시럽</text></svg>`;
+function setup2(){S.coats=S.fruits.map(()=>0);sk2.cx=640;sk2.cy=330;warned=false;toldDone=false;reached=S.fruits.map(()=>false);$('hand2').style.display='block';
+ $('meters').innerHTML=S.fruits.map((t,i)=>`<div class="meter">${fruitMini(t,40)}<div class="bar"><div class="zone"></div><div class="fill" id="mf${i}"></div></div><div class="pct" id="mp${i}">0%</div></div>`).join('');
+ render2()}
+function render2(){const el=$('sk2');el.style.left=(sk2.cx-80)+'px';el.style.top=(sk2.cy-280)+'px';
+ el.innerHTML=skewerSVG(S.fruits,S.coats,{side:true});
+ $('hand2').style.left=(sk2.cx-250)+'px';$('hand2').style.top=(sk2.cy-110)+'px';
+ S.coats.forEach((c,i)=>{const f=$('mf'+i);f.style.width=(Math.min(c,150)/150*100)+'%';f.style.background=c>130?'#ff5d5d':c>=100?'#3aa860':'#ffb84d';$('mp'+i).textContent=Math.round(Math.min(c,150))+'%'});
+ const ok=S.coats.every(c=>c>=100);$('next2').disabled=!ok;$('next2').classList.toggle('pulse',ok)}
+function submerged(){return sk2.cy>SURF+4?S.fruits.map((_,i)=>i):[]}
+function coatAdd(amt){const sub=submerged();
+ sub.forEach(i=>{const b=S.coats[i];S.coats[i]=Math.min(150,b+amt);
+  if(b<100&&S.coats[i]>=100&&!reached[i]){reached[i]=true;if(i===0)sfx.ding()}
+  if(b<=130&&S.coats[i]>130&&!warned){warned=true;sfx.err();toast('앗! 너무 오래 담갔어요. 설탕이 두꺼워져요 💦')}});
+ if(sub.length){dirty2=true;if(S.coats.every(c=>c>=100)&&!toldDone){toldDone=true;toast('설탕 코팅 끝! 꺼내서 다음 단계로 ▶')}}
+ return sub.length}
+$('sk2').addEventListener('pointerdown',e=>{e.preventDefault();audio();const p=sp(e);drag={kind:'sk2',ox:p.x-sk2.cx,oy:p.y-sk2.cy};$('hand2').style.display='none';$('sk2').style.cursor='grabbing'});
+$('next2').addEventListener('click',()=>{sfx.tick();goStep(3)});
+
+/* ---------- STEP 3 ---------- */
+$('fan').innerHTML=`<svg viewBox="0 0 300 420" width="260" height="364"><ellipse cx="150" cy="400" rx="100" ry="18" fill="#4aa8e8"/><rect x="138" y="240" width="24" height="160" rx="10" fill="#7cc0ec"/><circle cx="150" cy="150" r="124" fill="#eaf7ff" stroke="#7cc0ec" stroke-width="8"/>
+<g id="fanBlades">${[0,120,240].map(a=>`<ellipse cx="150" cy="88" rx="34" ry="58" fill="#8fd3ff" stroke="#4aa8e8" stroke-width="3" transform="rotate(${a} 150 150)"/>`).join('')}</g>
+<circle cx="150" cy="150" r="24" fill="#4aa8e8"/><circle cx="150" cy="150" r="86" fill="none" stroke="#b5dcf5" stroke-width="3"/><circle cx="150" cy="150" r="46" fill="none" stroke="#b5dcf5" stroke-width="3"/>
+${[0,30,60,90,120,150].map(a=>`<line x1="150" y1="30" x2="150" y2="270" stroke="#b5dcf5" stroke-width="2" transform="rotate(${a} 150 150)"/>`).join('')}</svg>`;
+$('thermo').innerHTML=`<svg viewBox="0 0 100 430" width="100" height="430"><rect x="62" y="312" width="12" height="38" rx="4" fill="#3aa860"/><rect x="30" y="20" width="30" height="340" rx="15" fill="#fff" stroke="#e8cdd3" stroke-width="4"/><rect id="thermFill" x="37" y="50" width="16" height="300" rx="8" fill="#ff4d4d"/><circle id="thermBulb" cx="45" cy="380" r="32" fill="#ff4d4d" stroke="#fff" stroke-width="5"/></svg>`;
+$('shaker').innerHTML=`<svg viewBox="0 0 90 140" width="90" height="140"><rect x="22" y="2" width="46" height="26" rx="8" fill="#ff6fae" stroke="#c0408a" stroke-width="3"/>${[30,45,60].map(x=>`<circle cx="${x}" cy="10" r="3" fill="#7a1e52"/>`).join('')}<rect x="12" y="26" width="66" height="108" rx="16" fill="#fff" stroke="#c0408a" stroke-width="3"/>${Array.from({length:22},(_,i)=>`<rect x="${18+(i*23)%52}" y="${70+(i*13)%56}" width="9" height="5" rx="2.5" fill="${CANDY[i%6]}" transform="rotate(${i*37} ${22+(i*23)%52} ${72+(i*13)%56})"/>`).join('')}<rect x="20" y="40" width="50" height="24" rx="6" fill="#ffe3f1"/><text x="45" y="58" text-anchor="middle" font-family="Jua" font-size="15" fill="#c0408a">POP!</text></svg>`;
+const SHAKER_HOME={x:590,y:150};
+function placeShaker(x,y){const s=$('shaker');s.style.left=x+'px';s.style.top=y+'px'}
+let fanOn=false,lastTR=-1,crisp=false,lastWind=0,lastCandy=0,toldHard=false;
+function coolV(){return clamp((100-S.temp)/75,0,1)}
+function setup3(){$('shakerLbl').innerHTML=S.topping?'팝핑캔디<br>끌어서 흔들기':'<span style="color:#e8294f">⚠️ 이 손님은<br>안 먹어요!</span>';$('shaker').style.opacity=S.topping?1:.55;S.temp=100;S.bits=S.fruits.map(()=>[]);lastTR=-1;crisp=false;toldHard=false;fanOn=false;$('fan').classList.remove('on');placeShaker(SHAKER_HOME.x,SHAKER_HOME.y);render3();
+ setTimeout(()=>toast(S.topping?'손님이 팝핑캔디를 원해요! 뜨거울 때 뿌려요 ✨':'🙅 이 손님은 팝핑캔디를 안 먹어요! 뿌리지 말고 식혀요 🌀'),200)}
+function render3(){const c=coolV();$('sk3').innerHTML=skewerSVG(S.fruits,S.coats,{cool:c,bits:S.bits});lastTR=S.temp;
+ const h=(S.temp-20)/80*300,col=`rgb(${Math.round(lerp(255,77,c))},${Math.round(lerp(77,163,c))},${Math.round(lerp(77,255,c))})`;
+ const tf=$('thermFill');tf.setAttribute('y',350-h);tf.setAttribute('height',h+20);tf.setAttribute('fill',col);$('thermBulb').setAttribute('fill',col);
+ $('tempTxt').textContent=Math.round(S.temp)+'°C';$('tempTxt').style.color=col;
+ updTopping();$('done3').disabled=S.temp>50;$('done3').classList.toggle('pulse',S.temp<=30)}
+function sprinkle(px,py){
+ const sx=px+rnd(-12,12),sy=py;const targets=S.fruits.map((_,i)=>i).filter(i=>130+fruitY(i,'up')>sy+10);
+ const el=document.createElement('div');el.className='candy';el.style.background=CANDY[Math.floor(Math.random()*CANDY.length)];el.style.left='0px';el.style.top='0px';$('s3').appendChild(el);
+ const near=Math.abs(sx-460)<44&&targets.length;
+ const i=near?targets[Math.floor(Math.random()*targets.length)]:-1;
+ const ey=near?130+fruitY(i,'up')+rnd(-28,28):650,ex=near?clamp(sx,460-34,460+34):sx;
+ const dur=Math.max(180,(ey-sy)*1.4);
+ el.animate([{transform:`translate(${sx}px,${sy}px) rotate(0deg)`},{transform:`translate(${ex}px,${ey}px) rotate(${rnd(-200,200)}deg)`}],{duration:dur,easing:'ease-in'}).onfinish=()=>{
+  if(near&&S.temp>50&&nBits()<80){el.remove();S.bits[i].push({x:ex-460-4,y:ey-(130+fruitY(i,'up'))-2,c:el.style.background,r:Math.round(rnd(0,180))});sfx.sprinkle();render3()}
+  else{if(near&&S.temp<=50&&!toldHard){toldHard=true;toast('설탕이 굳어서 팝핑캔디가 안 붙어요! 😢')}
+   el.animate([{transform:`translate(${ex}px,${ey}px)`},{transform:`translate(${ex+rnd(-60,60)}px,650px)`,opacity:0}],{duration:400}).onfinish=()=>el.remove()}};
+}
+$('shaker').addEventListener('pointerdown',e=>{e.preventDefault();audio();const p=sp(e);drag={kind:'shaker'};$('shaker').classList.add('pour');placeShaker(p.x-45,p.y-70)});
+const hold=$('hold');
+hold.addEventListener('pointerdown',e=>{e.preventDefault();audio();fanOn=true;$('fan').classList.add('on');try{hold.setPointerCapture(e.pointerId)}catch(_){} });
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>hold.addEventListener(ev,()=>{fanOn=false;$('fan').classList.remove('on')}));
+$('done3').addEventListener('click',()=>{if(S.temp>50)return;fanOn=false;$('fan').classList.remove('on');showResult()});
+
+/* ---------- RESULT ---------- */
+function showResult(){
+ const nb=nBits();
+ const fruitOK=S.fruits.every((t,i)=>t===S.order[i]);
+ const topOK=S.topping?nb>=10:nb===0;
+ const coatOK=S.coats.every(c=>c>=100&&c<=130);
+ const coolOK=S.temp<=30;
+ const stars=[fruitOK&&topOK,coatOK,coolOK].filter(Boolean).length;
+ const lost=3-stars;S.price=3000-500*lost;
+ $('resSk').innerHTML=skewerSVG(S.fruits,S.coats,{cool:coolV(),w:140,bits:S.bits});
+ $('resFace').textContent=['😐','🙂','😋','🤩'][stars];
+ $('resSay').textContent=['음... 다음엔 더 잘해 줘요!','고마워요!','와, 맛있어요!','우와! 진짜 탕후루 달인이에요!'][stars];
+ $('resStars').innerHTML=[0,1,2].map(i=>`<span class="star ${i<stars?'':'off'}">⭐</span>`).join('');
+ $('resLines').innerHTML=[
+  fruitOK?'✅ 주문대로 과일을 꽂았어요':'❌ 주문이랑 과일 순서가 달라요',
+  S.topping?(topOK?'✅ 팝핑캔디 톡톡! 딱 좋아요':nb>0?'❌ 팝핑캔디가 너무 조금이에요':'❌ 팝핑캔디를 깜빡했어요'):(topOK?'✅ 팝핑캔디 없이 깔끔하게!':'❌ 팝핑캔디 안 먹는 손님이었어요 😢'),
+  coatOK?'✅ 설탕이 딱 알맞아요':'❌ 설탕이 너무 두꺼워요',
+  coolOK?'✅ 바삭바삭하게 식었어요':'❌ 아직 조금 말랑해요'].map(s=>`<div class="rline">${s}</div>`).join('');
+ $('resCoin').innerHTML=lost?`가격: 3,000원 − 500원 × ${lost} = <b style="color:#e8294f">${won(S.price)}</b>`:`가격: <b style="color:#e8294f">3,000원</b> 그대로! 👍`;
+ $('result').classList.add('show');$('toast').classList.remove('show');sfx.win();if(nb)setTimeout(sfx.crackle,600);
+}
+$('nextCust').addEventListener('click',()=>{sfx.tick();newOrder();goStep(1);
+ const short=[...new Set(S.order)].some(t=>S.stock[t]<S.order.filter(x=>x===t).length);
+ if(short)setTimeout(()=>toast('과일이 부족해요! 반짝이는 📦 채우기를 눌러요'),300)});
+
+/* ---------- PAY ---------- */
+const PAYM=[{k:'cash',n:'현금으로',e:'💵'},{k:'card',n:'카드로',e:'💳'},{k:'bank',n:'계좌이체로',e:'📱'}];
+let pay={};
+function sr(el){const r=el.getBoundingClientRect(),q=stage.getBoundingClientRect();return{x:(r.left-q.left)/scale,y:(r.top-q.top)/scale,w:r.width/scale,h:r.height/scale}}
+const moneyEl=(v,st='')=>`<div class="money ${v>=1000?'bill b'+v:'coin'}" data-v="${v}" style="${st}">${v.toLocaleString('ko-KR')}원</div>`;
+function kaching(){tone(1568,.12,'triangle',.15);setTimeout(()=>tone(2093,.3,'triangle',.15),110)}
+function paySuccess(msg){if(pay.done)return;pay.done=true;kaching();
+ S.coins+=S.price;S.made++;save();updTop();toast(`💰 ${won(S.price)} 받았어요! ${msg||''}`);
+ const b=$('nextCust');b.style.display='block';b.classList.add('pulse')}
+function startPay(){const m=PAYM[Math.floor(Math.random()*3)];pay={m:m.k,done:false,wrong:0};
+ $('result').classList.remove('show');$('pay').classList.add('show');$('toast').classList.remove('show');
+ $('payFace').textContent=$('cust').textContent;$('paySay').textContent=`${m.e} ${m.n} 낼게요!`;
+ $('payPrice').textContent=won(S.price);$('nextCust').style.display='none';$('nextCust').classList.remove('pulse');
+ ({cash:cashUI,card:cardUI,bank:bankUI})[m.k]();sfx.tick()}
+/* 현금 */
+function cashUI(){const paid=[5000,10000][Math.floor(Math.random()*2)];pay.paid=paid;pay.change=paid-S.price;pay.tray=[];
+ $('payHow').textContent='손님이 낸 돈에서 가격을 빼고, 거스름돈을 돌려줘요!';
+ $('payBody').innerHTML=`<div class="payTxt" style="left:40px;top:0">손님이 낸 돈</div>${moneyEl(paid,'left:50px;top:40px;transform:scale(1.25);transform-origin:left top;cursor:default')}
+ <div class="payTxt" style="left:40px;top:150px;font-size:30px;line-height:1.5">${paid.toLocaleString('ko-KR')} − ${S.price.toLocaleString('ko-KR')}<br>= <span style="color:#e8294f">?</span> 원</div>
+ <div class="payTxt" style="left:390px;top:0;font-size:21px">💰 돈 통 — 눌러서 거스름돈을 모아요</div>
+ ${[5000,1000,500].map((v,i)=>moneyEl(v,`left:${390+i*175}px;top:38px`)).join('')}
+ <div class="tray" id="tray" style="left:390px;top:130px;width:550px;height:140px"></div>
+ <div class="payTxt" id="traySum" style="left:390px;top:280px">내가 모은 거스름돈: 0원</div>
+ <button class="btn sub" id="trayReset" style="left:390px;top:326px">↺ 다시</button>
+ <button class="btn" id="giveChange" style="left:560px;top:322px;font-size:26px;padding:12px 28px">거스름돈 주기 ✔</button>`;
+ $('payBody').querySelectorAll('.money').forEach((el,i)=>{if(i===0)return;el.addEventListener('pointerdown',e=>{e.preventDefault();if(pay.done)return;pay.tray.push(+el.dataset.v);sfx.tick();renderTray()})});
+ $('trayReset').addEventListener('click',()=>{pay.tray=[];renderTray()});
+ $('giveChange').addEventListener('click',()=>{if(pay.done)return;const sum=pay.tray.reduce((a,b)=>a+b,0);
+  if(sum===pay.change){paySuccess('거스름돈 딱 맞아요 👏')}
+  else{pay.wrong++;sfx.err();anim($('tray'),'shake');
+   toast(sum<pay.change?'거스름돈이 모자라요! 다시 계산해 봐요 🤔':'거스름돈을 너무 많이 줬어요! 😅');
+   if(pay.wrong>=2)setTimeout(()=>toast(`힌트: 거스름돈은 ${won(pay.change)}이에요`),2100)}});
+ renderTray()}
+function renderTray(){const t=$('tray');
+ t.innerHTML=pay.tray.map((v,i)=>`<div class="trayitem" data-i="${i}" style="width:${v>=1000?94:48}px;height:${v>=1000?46:48}px">${moneyEl(v,'position:absolute;left:0;top:0;transform:scale(.6);transform-origin:left top')}</div>`).join('')||'<div style="color:#c9a86a;font-size:20px;margin:40px auto">여기에 거스름돈이 모여요 (누르면 빼기)</div>';
+ t.querySelectorAll('.trayitem').forEach(el=>el.addEventListener('pointerdown',e=>{e.preventDefault();if(pay.done)return;pay.tray.splice(+el.dataset.i,1);sfx.tick();renderTray()}));
+ $('traySum').textContent=`내가 모은 거스름돈: ${won(pay.tray.reduce((a,b)=>a+b,0))}`}
+/* 카드 */
+const CARD_HOME={x:90,y:130};
+function cardUI(){$('payHow').textContent='손님 카드를 끌어서 단말기에 꽂아요! (톡 눌러도 OK)';
+ $('payBody').innerHTML=`<div class="payTxt" style="left:90px;top:80px">손님 카드</div>
+ <div id="ccard" style="left:${CARD_HOME.x}px;top:${CARD_HOME.y}px"><div>손님 카드</div><div class="chip"></div><div>**** 1234</div></div>
+ <div id="reader" class="a" style="left:500px;top:30px;width:240px;height:340px;border-radius:26px;background:#3a3f4a;box-shadow:0 8px 0 #22262e">
+  <div class="a" style="left:30px;top:-10px;width:180px;height:22px;border-radius:8px;background:#15181e"></div>
+  <div id="rscr" class="a" style="left:22px;top:36px;width:196px;height:110px;border-radius:12px;background:#bfe6b0;color:#1d3a14;font-size:24px;display:flex;align-items:center;justify-content:center;text-align:center;flex-direction:column">${won(S.price)}<span style="font-size:17px">카드를 꽂아 주세요</span></div>
+  ${Array.from({length:12},(_,i)=>`<div class="a" style="left:${36+(i%3)*60}px;top:${170+Math.floor(i/3)*40}px;width:44px;height:28px;border-radius:8px;background:#5b6270"></div>`).join('')}
+  <div class="a" style="left:0;right:0;bottom:-36px;text-align:center;color:#888;font-size:18px">카드 단말기</div>
+ </div>`;
+ $('ccard').addEventListener('pointerdown',e=>{e.preventDefault();if(pay.done||pay.inserting)return;const p=sp(e),c=sr($('ccard'));drag={kind:'card',ox:p.x-c.x,oy:p.y-c.y,sx:p.x,sy:p.y,moved:false};$('ccard').style.cursor='grabbing'})}
+function cardDrop(){const c=sr($('ccard')),r=sr($('reader'));
+ const over=c.x+c.w>r.x&&c.x<r.x+r.w&&c.y+c.h>r.y-60&&c.y<r.y+r.h;
+ if(!drag.moved||over)insertCard();else{const el=$('ccard');el.style.left=CARD_HOME.x+'px';el.style.top=CARD_HOME.y+'px'}}
+function insertCard(){pay.inserting=true;const el=$('ccard');el.style.transition='all .35s';el.style.left='520px';el.style.top='-60px';el.style.transform='rotate(0deg)';
+ setTimeout(()=>{tone(1800,.08,'square',.06);$('rscr').innerHTML='결제 중...<span style="font-size:17px">잠시만요</span>'},400);
+ setTimeout(()=>{tone(1800,.08,'square',.06);setTimeout(()=>tone(1800,.08,'square',.06),130);
+  $('rscr').innerHTML=`✅ 결제 완료<span style="font-size:17px">${won(S.price)}</span>`;
+  $('payBody').insertAdjacentHTML('beforeend',`<div class="receipt" style="left:770px;top:40px">🧾 영수증<hr style="margin:6px 0">탕후루 달인<br>탕후루 1개<br><b>${won(S.price)}</b><br>카드 결제</div>`);
+  paySuccess()},1500)}
+/* 계좌이체 */
+function bankUI(){$('payHow').textContent='우리 계좌번호를 알려 주고, 입금 알림을 확인해요!';
+ $('payBody').innerHTML=`<div class="a" id="acct" style="left:40px;top:10px;width:290px;background:#fff8e6;border:4px solid #e0b060;border-radius:22px;padding:16px;text-align:center;font-size:22px;color:#7a4a1e">🏦 우리 가게 계좌<div style="font-size:26px;margin:8px 0;color:#c06a10">달콤은행<br>123-4567-89</div>예금주: 탕후루 달인</div>
+ <button class="btn sub" id="tellAcct" style="left:50px;top:230px;font-size:22px">계좌번호 알려 주기 📋</button>
+ <div class="phone" style="left:380px;top:0"><div class="scr" id="cphone"><b>📱 손님 휴대폰</b><br><br><span style="color:#999">계좌번호를<br>기다리는 중...</span></div></div>
+ <div class="payTxt" style="left:650px;top:0;font-size:20px">🔔 우리 가게 휴대폰</div>
+ <div id="notiBox"></div>
+ <button class="btn" id="bankOK" style="left:660px;top:300px;font-size:26px;padding:12px 28px" disabled>입금 확인 ✔</button>`;
+ $('tellAcct').addEventListener('click',()=>{if(pay.told)return;pay.told=true;sfx.tick();$('tellAcct').disabled=true;anim($('acct'),'shake');
+  $('cphone').innerHTML=`<b>📱 손님 휴대폰</b><div style="text-align:left;margin-top:14px;line-height:1.7">받는 분: 탕후루 달인<br>달콤은행<br>123-4567-89<br>보낼 돈: <b style="color:#e8294f">${won(S.price)}</b></div><div id="sendSt" style="margin-top:14px;color:#4aa8e8">보내는 중... 💸</div>`;
+  setTimeout(()=>{$('sendSt').textContent='보냈어요 ✅';$('notiBox').innerHTML=`<div class="noti" style="left:650px;top:50px;width:290px">🔔 <b>입금 알림</b><br>손님 → 탕후루 달인<br><span style="color:#3aa860;font-size:28px">+${won(S.price)}</span></div>`;tone(1320,.15,'sine',.15);setTimeout(()=>tone(1760,.2,'sine',.15),150);
+   $('bankOK').disabled=false;$('bankOK').classList.add('pulse')},1600)});
+ $('bankOK').addEventListener('click',()=>{if($('bankOK').disabled)return;$('bankOK').classList.remove('pulse');$('bankOK').disabled=true;paySuccess('입금 확인 완료 👍')})}
+$('toPay').addEventListener('click',()=>{audio();startPay()});
+
+/* ---------- global pointer ---------- */
+let drag=null;
+addEventListener('pointermove',e=>{if(!drag)return;const p=sp(e);
+ if(drag.kind==='fruit'){if(Math.hypot(p.x-drag.sx,p.y-drag.sy)>12)drag.moved=true;posGhost(p)}
+ else if(drag.kind==='sk2'){
+  const ncx=clamp(p.x-drag.ox,440,780),ncy=clamp(p.y-drag.oy,170,SURF+38);
+  const dist=Math.hypot(ncx-sk2.cx,ncy-sk2.cy);
+  const wasIn=submerged().length;sk2.cx=ncx;sk2.cy=ncy;const isIn=submerged().length;
+  if(isIn&&!wasIn){sfx.slosh();ripple()}
+  if(coatAdd(dist*.075)){const n=performance.now();if(dist>4&&n-lastSlosh>260){lastSlosh=n;sfx.slosh()}if(dist>3&&n-lastRip>140){lastRip=n;ripple()}}
+  dirty2=true}
+ else if(drag.kind==='card'){if(Math.hypot(p.x-drag.sx,p.y-drag.sy)>10)drag.moved=true;const b=sr($('payBody'));const el=$('ccard');el.style.left=(p.x-drag.ox-b.x)+'px';el.style.top=(p.y-drag.oy-b.y)+'px'}
+ else if(drag.kind==='shaker'){placeShaker(p.x-45,p.y-70);const n=performance.now();if(n-lastCandy>55){lastCandy=n;sprinkle(p.x,p.y+40)}}
+});
+function endDrag(e,cancel){if(!drag)return;
+ if(drag.kind==='fruit'){drag.g.remove();if(!cancel){const p=sp(e);const over=p.x>390&&p.x<720&&p.y>60&&p.y<700;if(!drag.moved||over)addFruit(drag.t)}}
+ if(drag.kind==='sk2')$('sk2').style.cursor='grab';
+ if(drag.kind==='card'){$('ccard').style.cursor='grab';if(!cancel)cardDrop()}
+ if(drag.kind==='shaker'){$('shaker').classList.remove('pour');placeShaker(SHAKER_HOME.x,SHAKER_HOME.y)}
+ drag=null}
+addEventListener('pointerup',e=>endDrag(e,false));
+addEventListener('pointercancel',e=>endDrag(e,true));
+function ripple(){const r=document.createElement('div');r.className='ripple';r.style.left=(sk2.cx+280-fruitY(Math.floor(Math.random()*S.fruits.length),'up')-30)+'px';r.style.top=(SURF-8)+'px';$('s2').appendChild(r);setTimeout(()=>r.remove(),750)}
+
+/* ---------- loop ---------- */
+function loop(t){
+ if(S.step===2){if(submerged().length)coatAdd(.07);if(dirty2){dirty2=false;render2()}}
+ if(S.step===3){
+  if(fanOn){S.temp=Math.max(25,S.temp-.32);if(t-lastWind>90){lastWind=t;const w=document.createElement('div');w.className='wind';w.style.left=(780+Math.random()*40)+'px';w.style.top=(200+Math.random()*260)+'px';$('s3').appendChild(w);setTimeout(()=>w.remove(),650)}}
+  else S.temp=Math.max(25,S.temp-.012);
+  if(Math.abs(S.temp-lastTR)>.4)render3();
+  if(!crisp&&S.temp<=30){crisp=true;sfx.crunch();toast('바삭바삭! 다 식었어요 ✨ 완성을 눌러요')}
+  if(Math.random()<clamp((S.temp-30)/70,0,1)*.22){const i=Math.floor(Math.random()*S.fruits.length);const s=document.createElement('div');s.className='steam';
+   s.style.left=(446+Math.random()*30)+'px';s.style.top=(130+fruitY(i,'up')-50)+'px';s.style.setProperty('--dx',(Math.random()*40-20)+'px');$('s3').appendChild(s);setTimeout(()=>s.remove(),1650)}
+ }
+ requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+/* ---------- title ---------- */
+const decoBits=()=>[0,1,2,3].map(()=>Array.from({length:7},()=>({x:rnd(-30,24),y:rnd(-30,26),c:CANDY[Math.floor(Math.random()*6)],r:Math.round(rnd(0,180))})));
+$('decoL').innerHTML=skewerSVG(['a','k','g','l'],[115,115,115,115],{cool:1,w:120,bits:decoBits()});
+$('decoR').innerHTML=skewerSVG(['w','b','s','t'],[115,115,115,115],{cool:1,w:120});
+$('startBtn').addEventListener('click',()=>{audio();sfx.win();newOrder();updTop();goStep(1);setTimeout(()=>toast('손님이 왔어요! 주문을 보고 과일을 꽂아요 🍓🍇🥝'),300)});
+$('fsBtn').addEventListener('click',()=>{audio();try{const d=document.documentElement;const r=(d.requestFullscreen||d.webkitRequestFullscreen).call(d);if(r&&r.then)r.then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(_){}}).catch(()=>toast('여기서는 전체 화면을 쓸 수 없어요'))}catch(_){toast('여기서는 전체 화면을 쓸 수 없어요')}});
+/* ---------- app (PWA) ---------- */
+try{if(matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches||navigator.standalone)$('fsBtn').style.display='none'}catch(_){}
+let installEvt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installBtn').style.display='block'});
+$('installBtn').addEventListener('click',()=>{if(!installEvt)return;installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;$('installBtn').style.display='none'})});
+try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
+setTimeout(()=>{$('rotate').classList.add('fade');setTimeout(()=>$('rotate').classList.remove('intro','fade'),300)},1000);
+updTop();
+document.addEventListener('contextmenu',e=>e.preventDefault());
+</script>
+</body>
+</html>

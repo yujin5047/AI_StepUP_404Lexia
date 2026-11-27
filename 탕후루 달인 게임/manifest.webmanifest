@@ -1,0 +1,17 @@
+{
+  "name": "탕후루 달인",
+  "short_name": "탕후루 달인",
+  "description": "과일을 꽂고, 설탕을 묻히고, 식혀서 손님에게 파는 탕후루 만들기 게임",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#ffc9d5",
+  "theme_color": "#ff5d7d",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
