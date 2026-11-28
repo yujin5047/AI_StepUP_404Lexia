@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>일정 달력</title>
+  <!-- 휴대폰 홈 화면에 앱처럼 추가할 수 있게 해 주는 것들 -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#E53935">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="일정 달력">
+  <!-- 글꼴 (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <!-- 모양 파일 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+    일정 달력
+    만든 사람: 404 Lexia
+
+    화면의 "뼈대"만 여기에 있어요.
+    달력 날짜, 일정 목록, 색 동그라미 같은 건 app.js가 채워 넣어요.
+    id="..." 는 app.js가 그 부분을 찾을 때 쓰는 이름표예요.
+  -->
+  <div class="앱">
+
+    <!-- 1. 맨 위: 제목 + 포인트 -->
+    <header class="머리">
+      <h1>일정 달력</h1>
+      <div class="포인트">⭐ <span id="포인트">0</span>점</div>
+    </header>
+
+    <!-- 2. 배경 색 고르기 -->
+    <section class="카드 색고르기">
+      <span class="작은글씨">배경 색 고르기 · <span id="색이름">빨강</span></span>
+      <div class="색줄">
+        <span class="이름">진한</span>
+        <div class="동그라미들" id="진한색들"></div>
+      </div>
+      <div class="색줄">
+        <span class="이름">연한</span>
+        <div class="동그라미들" id="연한색들"></div>
+      </div>
+    </section>
+
+    <!-- 3. 달력 -->
+    <section class="카드">
+      <div class="달력위">
+        <button class="화살표" id="이전달" aria-label="이전 달">‹</button>
+        <h2 id="달제목">2026년 11월</h2>
+        <button class="화살표" id="다음달" aria-label="다음 달">›</button>
+      </div>
+      <div class="일주일">
+        <span class="요일 일요일">일</span>
+        <span class="요일">월</span>
+        <span class="요일">화</span>
+        <span class="요일">수</span>
+        <span class="요일">목</span>
+        <span class="요일">금</span>
+        <span class="요일 토요일">토</span>
+      </div>
+      <!-- 날짜 버튼들은 app.js가 만들어요 -->
+      <div class="일주일" id="날짜들"></div>
+      <div class="설명">
+        <span>● 일정 있음</span>
+        <span>□ 오늘</span>
+      </div>
+    </section>
+
+    <!-- 4. 그날 일정 목록 -->
+    <section class="카드 목록">
+      <div class="목록위">
+        <h2 id="목록제목">오늘</h2>
+        <span class="작은글씨" id="완료수">0 / 0 완료</span>
+      </div>
+
+      <!-- 일정들은 app.js가 만들어요 -->
+      <div class="일정들" id="일정목록"></div>
+
+      <!-- 5. 연속 보너스 안내 -->
+      <div class="보너스" id="보너스글">🔥 오늘 일정을 다 끝내면 연속 기록이 시작돼요!</div>
+
+      <!-- 6. 일정 추가 버튼 -->
+      <button class="큰버튼" id="추가버튼">+ 일정 추가</button>
+    </section>
+
+    <!-- 어디에 저장되는지 (서버 / 브라우저) -->
+    <p class="저장위치" id="저장위치">불러오는 중…</p>
+
+  </div>
+
+  <!-- 문제가 생겼을 때 잠깐 나오는 알림 -->
+  <div class="알림 숨김" id="알림" role="alert"></div>
+
+  <!-- ===== 일정 추가 창 (처음엔 숨겨져 있어요) ===== -->
+  <div class="어두운판 숨김" id="추가판">
+    <section class="추가창" role="dialog" aria-labelledby="창제목">
+
+      <div class="창위">
+        <h2 id="창제목">새 일정 추가</h2>
+        <button class="닫기" id="닫기버튼" aria-label="닫기">✕</button>
+      </div>
+
+      <!-- ① 제목 -->
+      <div class="칸">
+        <label class="칸이름" for="제목칸">① 제목</label>
+        <input class="입력" id="제목칸" type="text" maxlength="30" placeholder="예: 피아노 학원">
+      </div>
+
+      <!-- ② 시간 -->
+      <div class="칸">
+        <span class="칸이름">② 시간</span>
+        <div class="시간줄">
+          <label for="시작칸">시작</label>
+          <input class="입력" id="시작칸" type="time" value="15:00">
+          <span>~</span>
+          <label for="끝칸">끝</label>
+          <input class="입력" id="끝칸" type="time" value="16:00">
+        </div>
+      </div>
+
+      <!-- ③ 한 번 / 정규 -->
+      <div class="칸">
+        <span class="칸이름">③ 어떤 일정이에요?</span>
+        <div class="두버튼">
+          <button class="고르기 선택" id="한번버튼">한 번</button>
+          <button class="고르기" id="정규버튼">정규 (반복)</button>
+        </div>
+      </div>
+
+      <!-- 정규일 때만 보이는 작은 달력 -->
+      <div class="작은달력 숨김" id="작은달력">
+        <span class="작은글씨"><span id="작은달제목">11월</span> 반복할 날짜를 눌러서 골라요 · <span id="선택수">0</span>일 선택</span>
+        <div class="일주일">
+          <span class="요일">일</span>
+          <span class="요일">월</span>
+          <span class="요일">화</span>
+          <span class="요일">수</span>
+          <span class="요일">목</span>
+          <span class="요일">금</span>
+          <span class="요일">토</span>
+        </div>
+        <div class="일주일" id="작은날짜들"></div>
+      </div>
+
+      <!-- 빠뜨린 게 있을 때 나오는 안내 글 -->
+      <p class="안내글" id="안내글"></p>
+
+      <button class="큰버튼" id="저장버튼">저장하기</button>
+
+      <!-- 고칠 때만 보이는 지우기 버튼들 (실수로 안 지워지게 두 번 눌러야 해요) -->
+      <div class="지우기칸 숨김" id="지우기칸">
+        <button class="지우기" id="이날지우기">이 날만 빼기</button>
+        <button class="지우기" id="전부지우기">일정 지우기</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 움직임(기능) 파일 -->
+  <script src="app.js"></script>
+</body>
+</html>

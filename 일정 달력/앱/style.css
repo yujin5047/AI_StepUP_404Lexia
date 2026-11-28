@@ -1,0 +1,598 @@
+/* =========================================
+   일정 달력 – 모양(디자인) 파일
+   만든 사람: 404 Lexia
+   ========================================= */
+
+/* 색깔 상자: 여기 색만 바꾸면 앱 전체 색이 바뀌어요 */
+:root {
+  --배경색: #E53935;      /* 진한 빨강 */
+  --진한색: #C62828;      /* 버튼, 선택한 날짜 색 */
+  --제목글씨색: #FFFFFF;  /* 맨 위 "일정 달력" 글씨 색 */
+}
+
+/* ---------- 기본 ---------- */
+* {
+  box-sizing: border-box;
+}
+
+/* hidden이 붙은 건 꼭 숨겨요 */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: #EEEEEE;
+  font-family: 'Gowun Dodum', sans-serif;
+  color: #222222;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 휴대폰 화면 크기 (휴대폰에서는 화면 가득, 컴퓨터에서는 가운데 390px) */
+.앱 {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 20px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--배경색);
+}
+
+/* 흰색 상자 (카드) */
+.카드 {
+  background: #FFFFFF;
+  border-radius: 18px;
+  padding: 14px;
+}
+
+/* ---------- 1. 맨 위: 제목 + 포인트 ---------- */
+.머리 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 0;
+}
+
+.머리 h1 {
+  margin: 0;
+  font-family: 'Jua', sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--제목글씨색);
+}
+
+.포인트 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: 'Jua', sans-serif;
+  font-size: 18px;
+}
+
+/* ---------- 2. 배경 색 고르기 ---------- */
+.색고르기 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.작은글씨 {
+  font-size: 13px;
+  color: #555555;
+}
+
+.색줄 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.색줄 .이름 {
+  width: 34px;
+  font-size: 12px;
+  color: #555555;
+}
+
+.동그라미들 {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.동그라미 {
+  width: min(28px, 7vw);    /* 좁은 휴대폰에서는 조금 작게 */
+  height: min(28px, 7vw);
+  flex: none;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+}
+
+/* 지금 고른 색 */
+.동그라미.선택 {
+  border: 3px solid #222222;
+  box-shadow: 0 0 0 2px #FFFFFF inset;
+}
+
+/* ---------- 3. 달력 ---------- */
+.달력위 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 10px;
+}
+
+.달력위 h2 {
+  margin: 0;
+  font-family: 'Jua', sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.화살표 {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: #F2F2F2;
+  font-size: 18px;
+}
+
+/* 7칸짜리 줄 (일~토) */
+.일주일 {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.요일 {
+  text-align: center;
+  font-size: 13px;
+  color: #555555;
+  padding-bottom: 6px;
+}
+
+.일요일 { color: #C62828; }
+.토요일 { color: #1565C0; }
+
+.날짜 {
+  height: 46px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 16px;
+  color: #222222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.날짜.일요일 { color: #C62828; }
+.날짜.토요일 { color: #1565C0; }
+
+/* 일정이 있는 날: 아래에 점 */
+.날짜.일정있음::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #555555;
+}
+
+/* 오늘 */
+.날짜.오늘 {
+  border-color: #222222;
+}
+
+/* 내가 누른 날짜 */
+.날짜.고른날 {
+  background: var(--진한색);
+  border-color: var(--진한색);
+  color: #FFFFFF;
+}
+
+.날짜.고른날::after {
+  background: #FFFFFF;
+}
+
+.설명 {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 10px;
+  font-size: 12px;
+  color: #555555;
+}
+
+/* ---------- 4. 그날 일정 목록 ---------- */
+.목록 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 14px;
+}
+
+.목록위 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.목록위 h2 {
+  margin: 0;
+  font-family: 'Jua', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.일정 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #F6F6F6;
+}
+
+/* 완료 체크 네모 */
+.체크 {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 2px solid #9E9E9E;
+  border-radius: 9px;
+  background: #FFFFFF;
+  color: #FFFFFF;
+  font-size: 18px;
+}
+
+.일정.완료 .체크 {
+  background: var(--진한색);
+  border-color: var(--진한색);
+}
+
+.일정내용 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.일정제목 {
+  font-size: 16px;
+}
+
+.일정.완료 .일정제목 {
+  color: #757575;
+  text-decoration: line-through;
+}
+
+.시간 {
+  font-size: 13px;
+  color: #555555;
+}
+
+/* 정규 / 한 번 표시 */
+.꼬리표 {
+  flex: none;
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.꼬리표.정규 {
+  background: #E3F2FD;
+  color: #0D47A1;
+}
+
+.꼬리표.한번 {
+  background: #FCE4EC;
+  color: #880E4F;
+}
+
+/* ---------- 5. 연속 보너스 안내 ---------- */
+.보너스 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #FFF6D6;
+  font-size: 14px;
+  color: #5B3A00;
+}
+
+/* ---------- 6. 큰 버튼 (일정 추가, 저장하기) ---------- */
+.큰버튼 {
+  height: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--진한색);
+  color: #FFFFFF;
+  font-family: 'Jua', sans-serif;
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* =========================================
+   일정 추가 창
+   ========================================= */
+
+/* 뒤쪽을 어둡게 덮는 판 (화면에 딱 붙어 있어요) */
+.어두운판 {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* 아래에서 올라온 흰 창 */
+.추가창 {
+  width: 100%;
+  max-width: 390px;
+  max-height: 100vh;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border-radius: 24px 24px 0 0;
+  padding: 18px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.창위 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.창위 h2 {
+  margin: 0;
+  font-family: 'Jua', sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.닫기 {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: #F2F2F2;
+  color: #333333;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.칸 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.칸이름 {
+  font-size: 14px;
+  color: #333333;
+}
+
+.입력 {
+  height: 46px;
+  border: 2px solid #D0D0D0;
+  border-radius: 12px;
+  padding: 0 12px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.시간줄 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555555;
+}
+
+.시간줄 .입력 {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+}
+
+/* 한 번 / 정규 고르는 두 버튼 */
+.두버튼 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.고르기 {
+  height: 46px;
+  border: 2px solid #D0D0D0;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #333333;
+  font-size: 15px;
+}
+
+.고르기.선택 {
+  background: var(--진한색);
+  border-color: var(--진한색);
+  color: #FFFFFF;
+}
+
+/* 반복할 날짜 고르는 작은 달력 */
+.작은달력 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #F6F6F6;
+}
+
+.작은달력 .일주일 {
+  gap: 3px;
+}
+
+.작은달력 .요일 {
+  font-size: 12px;
+  padding-bottom: 0;
+}
+
+.작은날짜 {
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  font-size: 14px;
+  color: #222222;
+}
+
+.작은날짜.선택 {
+  background: var(--진한색);
+  color: #FFFFFF;
+}
+
+.안내글 {
+  margin: 0;
+  font-size: 14px;
+  color: #B71C1C;
+}
+
+/* 안내 글이 비어 있으면 자리를 차지하지 않아요 */
+.안내글:empty {
+  display: none;
+}
+
+/* =========================================
+   app.js가 쓰는 모양
+   ========================================= */
+
+/* 숨기기 */
+.숨김 {
+  display: none !important;
+}
+
+/* 달력 1일 앞의 빈칸 */
+.빈칸 {
+  height: 46px;
+}
+
+/* 일정들 묶음 */
+.일정들 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 일정이 없을 때 글 */
+.없음 {
+  margin: 0;
+  padding: 14px 0;
+  text-align: center;
+  font-size: 15px;
+  color: #555555;
+  line-height: 1.5;
+}
+
+/* 일정 옆 ✏️ 고치기 버튼 */
+.고치기 {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #FFFFFF;
+  font-size: 16px;
+}
+
+.고치기:hover {
+  background: #E8E8E8;
+}
+
+/* 일정 지우기 버튼들 */
+.지우기칸 {
+  display: flex;
+  gap: 8px;
+}
+
+.지우기 {
+  flex: 1;
+  height: 46px;
+  border: 2px solid #E57373;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #B71C1C;
+  font-size: 15px;
+}
+
+/* 한 번 눌러서 "정말요?" 하고 물어보는 중 */
+.지우기.확인중 {
+  background: #B71C1C;
+  border-color: #B71C1C;
+  color: #FFFFFF;
+}
+
+/* 맨 아래: 어디에 저장되는지 */
+.저장위치 {
+  margin: 0;
+  align-self: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  color: #333333;
+}
+
+/* 문제가 생겼을 때 위에 잠깐 나오는 알림 */
+.알림 {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 340px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #222222;
+  color: #FFFFFF;
+  font-size: 14px;
+}
+
+/* 저장하는 동안 저장하기 버튼 */
+.큰버튼:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* 아직 오지 않은 날의 체크 네모 */
+.체크:disabled {
+  background: #EEEEEE;
+  border-color: #CCCCCC;
+  cursor: not-allowed;
+}
