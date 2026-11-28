@@ -235,8 +235,22 @@ html,body{overscroll-behavior:none;background:#ffbfcd}
 const $=id=>document.getElementById(id);
 const stage=$('stage');let scale=1;
 const wrapEl=$('wrap');
-function fit(){const W=wrapEl.clientWidth||innerWidth,H=wrapEl.clientHeight||innerHeight;scale=Math.min(W/1280,H/800);
- stage.style.transform=`translate(${(W-1280*scale)/2}px,${(H-800*scale)/2}px) scale(${scale})`;}
+let SW=1280,DX=0,SHIFT=null;
+/* 화면이 가로로 길면 게임판도 옆으로 넓혀서 꽉 채워요 */
+const sh=cx=>DX*Math.max(0,Math.min(1,(cx-200)/880));
+function fit(){const W=wrapEl.clientWidth||innerWidth,H=wrapEl.clientHeight||innerHeight;
+ SW=Math.round(Math.max(1280,Math.min(2000,800*W/H)));DX=SW-1280;stage.style.width=SW+'px';
+ scale=Math.min(W/SW,H/800);
+ stage.style.transform=`translate(${(W-SW*scale)/2}px,${(H-800*scale)/2}px) scale(${scale})`;
+ document.body.classList.toggle('small',scale<.62);
+ if(SHIFT)applyShift();}
+function initShift(){const scr=[...document.querySelectorAll('.screen')];const was=scr.map(e=>e.classList.contains('show'));
+ scr.forEach(e=>e.classList.add('show'));
+ const skip=new Set(['sk2','hand2','shaker','toast']);
+ const list=[...document.querySelectorAll('.screen > *, #bowls > *')].filter(el=>!skip.has(el.id)&&/px$/.test(el.style.left||''));
+ SHIFT=list.map(el=>{const b=parseFloat(el.style.left);return{el,b,c:el.dataset.c?+el.dataset.c:b+(el.offsetWidth||0)/2}});
+ scr.forEach((e,i)=>e.classList.toggle('show',was[i]));applyShift()}
+function applyShift(){SHIFT.forEach(o=>{o.el.style.left=(o.b+sh(o.c))+'px'})}
 addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));fit();
 function sp(e){const r=stage.getBoundingClientRect();return{x:(e.clientX-r.left)/scale,y:(e.clientY-r.top)/scale}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -355,10 +369,10 @@ function goStep(n){S.step=n;['s1','s2','s3','title','result','pay'].forEach(id=>
 
 /* ---------- STEP 1 ---------- */
 const CELL=KEYS.map((k,i)=>({k,x:790+(i%2)*240,y:92+Math.floor(i/2)*148}));
-$('bowls').innerHTML=CELL.map(c=>`<div class="a" id="bowl-${c.k}" style="left:${c.x}px;top:${c.y+8}px;cursor:grab"></div>
- <div class="badge" id="num-${c.k}" style="left:${c.x+140}px;top:${c.y+4}px">2</div>
- <div class="refill" id="box-${c.k}" style="left:${c.x+176}px;top:${c.y+34}px">📦</div>
- <div class="refill-t" style="left:${c.x+169}px;top:${c.y+96}px">채우기</div>`).join('');
+$('bowls').innerHTML=CELL.map(c=>`<div class="a" id="bowl-${c.k}" data-c="${c.x+120}" style="left:${c.x}px;top:${c.y+8}px;cursor:grab"></div>
+ <div class="badge" id="num-${c.k}" data-c="${c.x+120}" style="left:${c.x+140}px;top:${c.y+4}px">2</div>
+ <div class="refill" id="box-${c.k}" data-c="${c.x+120}" style="left:${c.x+176}px;top:${c.y+34}px">📦</div>
+ <div class="refill-t" data-c="${c.x+120}" style="left:${c.x+169}px;top:${c.y+96}px">채우기</div>`).join('');
 function renderBowls(){KEYS.forEach(t=>{$('bowl-'+t).innerHTML=bowlSVG(t,S.stock[t]);$('num-'+t).textContent=S.stock[t];
  const need=S.order.slice(S.fruits.length).filter(x=>x===t).length;
  $('box-'+t).classList.toggle('pulse',S.stock[t]+S.pending[t]<need)})}
@@ -378,7 +392,7 @@ function refill(t){audio();const c=CELL.find(c=>c.k===t);
  if(S.stock[t]+S.pending[t]>=6){sfx.err();toast(`${FR[t].n} 그릇이 가득 찼어요!`);anim($('bowl-'+t),'shake');return}
  S.pending[t]++;sfx.tick();
  const el=document.createElement('div');el.className='ghost';el.style.left='0px';el.style.top='0px';el.innerHTML=fruitMini(t,50);stage.appendChild(el);
- const x0=c.x+204,y0=c.y+62,x1=c.x+85+rnd(-25,25),y1=c.y+70;
+ const bx=sr($('box-'+t)),bw=sr($('bowl-'+t));const x0=bx.x+bx.w/2,y0=bx.y+bx.h/2,x1=bw.x+bw.w/2+rnd(-25,25),y1=bw.y+bw.h*.5;
  const a=el.animate([{transform:`translate(${x0-25}px,${y0-25}px) scale(.6)`},{transform:`translate(${(x0+x1)/2-25}px,${y0-110}px) scale(1)`},{transform:`translate(${x1-25}px,${y1-25}px) scale(.8)`}],{duration:420,easing:'ease-in-out'});
  a.onfinish=()=>{el.remove();S.pending[t]--;S.stock[t]=Math.min(6,S.stock[t]+1);sfx.pop();renderBowls();if(S.stock[t]===6)toast(`${FR[t].n} 가득! 👍`)};
 }
@@ -399,9 +413,9 @@ $('potFront').innerHTML=`<svg viewBox="0 0 760 260" width="760" height="260"><pa
 function setup2(){S.coats=S.fruits.map(()=>0);sk2.cx=640;sk2.cy=330;warned=false;toldDone=false;reached=S.fruits.map(()=>false);$('hand2').style.display='block';
  $('meters').innerHTML=S.fruits.map((t,i)=>`<div class="meter">${fruitMini(t,40)}<div class="bar"><div class="zone"></div><div class="fill" id="mf${i}"></div></div><div class="pct" id="mp${i}">0%</div></div>`).join('');
  render2()}
-function render2(){const el=$('sk2');el.style.left=(sk2.cx-80)+'px';el.style.top=(sk2.cy-280)+'px';
+function render2(){const el=$('sk2');el.style.left=(sk2.cx+sh(640)-80)+'px';el.style.top=(sk2.cy-280)+'px';
  el.innerHTML=skewerSVG(S.fruits,S.coats,{side:true});
- $('hand2').style.left=(sk2.cx-250)+'px';$('hand2').style.top=(sk2.cy-110)+'px';
+ $('hand2').style.left=(sk2.cx+sh(640)-250)+'px';$('hand2').style.top=(sk2.cy-110)+'px';
  S.coats.forEach((c,i)=>{const f=$('mf'+i);f.style.width=(Math.min(c,150)/150*100)+'%';f.style.background=c>130?'#ff5d5d':c>=100?'#3aa860':'#ffb84d';$('mp'+i).textContent=Math.round(Math.min(c,150))+'%'});
  const ok=S.coats.every(c=>c>=100);$('next2').disabled=!ok;$('next2').classList.toggle('pulse',ok)}
 function submerged(){return sk2.cy>SURF+4?S.fruits.map((_,i)=>i):[]}
@@ -411,7 +425,7 @@ function coatAdd(amt){const sub=submerged();
   if(b<=130&&S.coats[i]>130&&!warned){warned=true;sfx.err();toast('앗! 너무 오래 담갔어요. 설탕이 두꺼워져요 💦')}});
  if(sub.length){dirty2=true;if(S.coats.every(c=>c>=100)&&!toldDone){toldDone=true;toast('설탕 코팅 끝! 꺼내서 다음 단계로 ▶')}}
  return sub.length}
-$('sk2').addEventListener('pointerdown',e=>{e.preventDefault();audio();const p=sp(e);drag={kind:'sk2',ox:p.x-sk2.cx,oy:p.y-sk2.cy};$('hand2').style.display='none';$('sk2').style.cursor='grabbing'});
+$('sk2').addEventListener('pointerdown',e=>{e.preventDefault();audio();const p=sp(e);drag={kind:'sk2',ox:p.x-sk2.cx-sh(640),oy:p.y-sk2.cy};$('hand2').style.display='none';$('sk2').style.cursor='grabbing'});
 $('next2').addEventListener('click',()=>{sfx.tick();goStep(3)});
 
 /* ---------- STEP 3 ---------- */
@@ -421,7 +435,7 @@ $('fan').innerHTML=`<svg viewBox="0 0 300 420" width="260" height="364"><ellipse
 ${[0,30,60,90,120,150].map(a=>`<line x1="150" y1="30" x2="150" y2="270" stroke="#b5dcf5" stroke-width="2" transform="rotate(${a} 150 150)"/>`).join('')}</svg>`;
 $('thermo').innerHTML=`<svg viewBox="0 0 100 430" width="100" height="430"><rect x="62" y="312" width="12" height="38" rx="4" fill="#3aa860"/><rect x="30" y="20" width="30" height="340" rx="15" fill="#fff" stroke="#e8cdd3" stroke-width="4"/><rect id="thermFill" x="37" y="50" width="16" height="300" rx="8" fill="#ff4d4d"/><circle id="thermBulb" cx="45" cy="380" r="32" fill="#ff4d4d" stroke="#fff" stroke-width="5"/></svg>`;
 $('shaker').innerHTML=`<svg viewBox="0 0 90 140" width="90" height="140"><rect x="22" y="2" width="46" height="26" rx="8" fill="#ff6fae" stroke="#c0408a" stroke-width="3"/>${[30,45,60].map(x=>`<circle cx="${x}" cy="10" r="3" fill="#7a1e52"/>`).join('')}<rect x="12" y="26" width="66" height="108" rx="16" fill="#fff" stroke="#c0408a" stroke-width="3"/>${Array.from({length:22},(_,i)=>`<rect x="${18+(i*23)%52}" y="${70+(i*13)%56}" width="9" height="5" rx="2.5" fill="${CANDY[i%6]}" transform="rotate(${i*37} ${22+(i*23)%52} ${72+(i*13)%56})"/>`).join('')}<rect x="20" y="40" width="50" height="24" rx="6" fill="#ffe3f1"/><text x="45" y="58" text-anchor="middle" font-family="Jua" font-size="15" fill="#c0408a">POP!</text></svg>`;
-const SHAKER_HOME={x:590,y:150};
+const SHAKER_HOME={get x(){return 590+sh(635)},y:150};
 function placeShaker(x,y){const s=$('shaker');s.style.left=x+'px';s.style.top=y+'px'}
 let fanOn=false,lastTR=-1,crisp=false,lastWind=0,lastCandy=0,toldHard=false;
 function coolV(){return clamp((100-S.temp)/75,0,1)}
@@ -435,12 +449,12 @@ function render3(){const c=coolV();$('sk3').innerHTML=skewerSVG(S.fruits,S.coats
 function sprinkle(px,py){
  const sx=px+rnd(-12,12),sy=py;const targets=S.fruits.map((_,i)=>i).filter(i=>130+fruitY(i,'up')>sy+10);
  const el=document.createElement('div');el.className='candy';el.style.background=CANDY[Math.floor(Math.random()*CANDY.length)];el.style.left='0px';el.style.top='0px';$('s3').appendChild(el);
- const near=Math.abs(sx-460)<44&&targets.length;
+ const C3=460+sh(460);const near=Math.abs(sx-C3)<44&&targets.length;
  const i=near?targets[Math.floor(Math.random()*targets.length)]:-1;
- const ey=near?130+fruitY(i,'up')+rnd(-28,28):650,ex=near?clamp(sx,460-34,460+34):sx;
+ const ey=near?130+fruitY(i,'up')+rnd(-28,28):650,ex=near?clamp(sx,C3-34,C3+34):sx;
  const dur=Math.max(180,(ey-sy)*1.4);
  el.animate([{transform:`translate(${sx}px,${sy}px) rotate(0deg)`},{transform:`translate(${ex}px,${ey}px) rotate(${rnd(-200,200)}deg)`}],{duration:dur,easing:'ease-in'}).onfinish=()=>{
-  if(near&&S.temp>50&&nBits()<80){el.remove();S.bits[i].push({x:ex-460-4,y:ey-(130+fruitY(i,'up'))-2,c:el.style.background,r:Math.round(rnd(0,180))});sfx.sprinkle();render3()}
+  if(near&&S.temp>50&&nBits()<80){el.remove();S.bits[i].push({x:ex-C3-4,y:ey-(130+fruitY(i,'up'))-2,c:el.style.background,r:Math.round(rnd(0,180))});sfx.sprinkle();render3()}
   else{if(near&&S.temp<=50&&!toldHard){toldHard=true;toast('설탕이 굳어서 팝핑캔디가 안 붙어요! 😢')}
    el.animate([{transform:`translate(${ex}px,${ey}px)`},{transform:`translate(${ex+rnd(-60,60)}px,650px)`,opacity:0}],{duration:400}).onfinish=()=>el.remove()}};
 }
@@ -553,7 +567,7 @@ let drag=null;
 addEventListener('pointermove',e=>{if(!drag)return;const p=sp(e);
  if(drag.kind==='fruit'){if(Math.hypot(p.x-drag.sx,p.y-drag.sy)>12)drag.moved=true;posGhost(p)}
  else if(drag.kind==='sk2'){
-  const ncx=clamp(p.x-drag.ox,440,780),ncy=clamp(p.y-drag.oy,170,SURF+38);
+  const ncx=clamp(p.x-drag.ox-sh(640),440,780),ncy=clamp(p.y-drag.oy,170,SURF+38);
   const dist=Math.hypot(ncx-sk2.cx,ncy-sk2.cy);
   const wasIn=submerged().length;sk2.cx=ncx;sk2.cy=ncy;const isIn=submerged().length;
   if(isIn&&!wasIn){sfx.slosh();ripple()}
@@ -563,25 +577,25 @@ addEventListener('pointermove',e=>{if(!drag)return;const p=sp(e);
  else if(drag.kind==='shaker'){placeShaker(p.x-45,p.y-70);const n=performance.now();if(n-lastCandy>55){lastCandy=n;sprinkle(p.x,p.y+40)}}
 });
 function endDrag(e,cancel){if(!drag)return;
- if(drag.kind==='fruit'){drag.g.remove();if(!cancel){const p=sp(e);const over=p.x>390&&p.x<720&&p.y>60&&p.y<700;if(!drag.moved||over)addFruit(drag.t)}}
+ if(drag.kind==='fruit'){drag.g.remove();if(!cancel){const p=sp(e);const k=sr($('sk1'));const over=p.x>k.x-80&&p.x<k.x+k.w+80&&p.y>60&&p.y<700;if(!drag.moved||over)addFruit(drag.t)}}
  if(drag.kind==='sk2')$('sk2').style.cursor='grab';
  if(drag.kind==='card'){$('ccard').style.cursor='grab';if(!cancel)cardDrop()}
  if(drag.kind==='shaker'){$('shaker').classList.remove('pour');placeShaker(SHAKER_HOME.x,SHAKER_HOME.y)}
  drag=null}
 addEventListener('pointerup',e=>endDrag(e,false));
 addEventListener('pointercancel',e=>endDrag(e,true));
-function ripple(){const r=document.createElement('div');r.className='ripple';r.style.left=(sk2.cx+280-fruitY(Math.floor(Math.random()*S.fruits.length),'up')-30)+'px';r.style.top=(SURF-8)+'px';$('s2').appendChild(r);setTimeout(()=>r.remove(),750)}
+function ripple(){const r=document.createElement('div');r.className='ripple';r.style.left=(sk2.cx+sh(640)+280-fruitY(Math.floor(Math.random()*S.fruits.length),'up')-30)+'px';r.style.top=(SURF-8)+'px';$('s2').appendChild(r);setTimeout(()=>r.remove(),750)}
 
 /* ---------- loop ---------- */
 function loop(t){
  if(S.step===2){if(submerged().length)coatAdd(.07);if(dirty2){dirty2=false;render2()}}
  if(S.step===3){
-  if(fanOn){S.temp=Math.max(25,S.temp-.32);if(t-lastWind>90){lastWind=t;const w=document.createElement('div');w.className='wind';w.style.left=(780+Math.random()*40)+'px';w.style.top=(200+Math.random()*260)+'px';$('s3').appendChild(w);setTimeout(()=>w.remove(),650)}}
+  if(fanOn){S.temp=Math.max(25,S.temp-.32);if(t-lastWind>90){lastWind=t;const w=document.createElement('div');w.className='wind';w.style.left=(780+sh(930)+Math.random()*40)+'px';w.style.top=(200+Math.random()*260)+'px';$('s3').appendChild(w);setTimeout(()=>w.remove(),650)}}
   else S.temp=Math.max(25,S.temp-.012);
   if(Math.abs(S.temp-lastTR)>.4)render3();
   if(!crisp&&S.temp<=30){crisp=true;sfx.crunch();toast('바삭바삭! 다 식었어요 ✨ 완성을 눌러요')}
   if(Math.random()<clamp((S.temp-30)/70,0,1)*.22){const i=Math.floor(Math.random()*S.fruits.length);const s=document.createElement('div');s.className='steam';
-   s.style.left=(446+Math.random()*30)+'px';s.style.top=(130+fruitY(i,'up')-50)+'px';s.style.setProperty('--dx',(Math.random()*40-20)+'px');$('s3').appendChild(s);setTimeout(()=>s.remove(),1650)}
+   s.style.left=(446+sh(460)+Math.random()*30)+'px';s.style.top=(130+fruitY(i,'up')-50)+'px';s.style.setProperty('--dx',(Math.random()*40-20)+'px');$('s3').appendChild(s);setTimeout(()=>s.remove(),1650)}
  }
  requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
@@ -598,6 +612,7 @@ let installEvt=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installBtn').style.display='block'});
 $('installBtn').addEventListener('click',()=>{if(!installEvt)return;installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;$('installBtn').style.display='none'})});
 try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
+initShift();
 setTimeout(()=>{$('rotate').classList.add('fade');setTimeout(()=>$('rotate').classList.remove('intro','fade'),300)},1000);
 updTop();
 document.addEventListener('contextmenu',e=>e.preventDefault());
