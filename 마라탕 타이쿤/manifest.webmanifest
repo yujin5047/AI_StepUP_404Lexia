@@ -1,0 +1,17 @@
+{
+  "name": "마라탕 타이쿤",
+  "short_name": "마라탕",
+  "description": "재료를 고르고, 맵기를 정하고, 계산하고, 먹는 마라탕 가게 게임",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#fff4e6",
+  "theme_color": "#e8402a",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
